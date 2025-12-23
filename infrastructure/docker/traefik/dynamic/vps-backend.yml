@@ -1,0 +1,39 @@
+# Traefik VPS Backend Configuration
+# Homelab OSS Stack
+# For future VPS integration
+
+http:
+  services:
+    # Homelab backend load balancer
+    homelab-backend:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.16.7"  # pve-thinkpad (Host A)
+          - url: "http://192.168.17.1"  # pve-ryzen (Host B)
+        healthCheck:
+          path: /health
+          interval: 30s
+          timeout: 5s
+          scheme: http
+
+  middlewares:
+    # VPS-specific IP whitelist
+    vps-whitelist:
+      ipWhiteList:
+        sourceRange:
+          - "YOUR_VPS_IP/32"       # Replace with actual VPS IP
+          - "192.168.16.0/24"      # Host A subnet
+          - "192.168.17.0/24"      # Host B subnet
+          - "100.64.0.0/10"        # Tailscale range
+
+  routers:
+    # VPS to Homelab routing
+    vps-to-homelab:
+      rule: "Host(`homelab.yourdomain.com`)"
+      service: homelab-backend
+      middlewares:
+        - vps-whitelist
+        - authentik
+        - security-headers
+      tls:
+        certResolver: cloudflare

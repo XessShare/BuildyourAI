@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  brainstorm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brainstorm
+    command: fortune

@@ -1,0 +1,39 @@
+# Traefik Static Configuration
+# Phase 1: IP-based deployment without SSL
+
+api:
+  dashboard: true
+  insecure: true  # Dashboard accessible without auth for Phase 1
+
+entryPoints:
+  web:
+    address: ":80"
+  # websecure disabled for Phase 1 (no SSL yet)
+  # websecure:
+  #   address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: homelab_network
+    watch: true
+  file:
+    directory: /config
+    watch: true
+
+# SSL/ACME disabled for Phase 1
+# certificatesResolvers:
+#   cloudflare:
+#     acme:
+#       email: ${TRAEFIK_ACME_EMAIL}
+#       storage: /acme.json
+#       dnsChallenge:
+#         provider: cloudflare
+
+log:
+  level: INFO
+  filePath: /var/log/traefik/traefik.log
+
+accessLog:
+  filePath: /var/log/traefik/access.log

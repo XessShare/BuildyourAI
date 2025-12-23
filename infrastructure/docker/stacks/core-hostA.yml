@@ -1,0 +1,135 @@
+version: '3.9'
+
+# Core Infrastructure Stack for Host A (pve-thinkpad)
+# Multi-Host Setup - PostgreSQL/Redis run on Host B (192.168.17.1)
+#
+# IMPORTANT: Deploy core-hostB.yml on Host B FIRST before deploying this!
+#
+# Services:
+# - Traefik (Reverse Proxy + SSL)
+# - Authentik (SSO + Identity Provider) - connects to PostgreSQL/Redis on Host B
+# - Portainer (Docker GUI Management)
+
+networks:
+  homelab_network:
+    external: true
+
+volumes:
+  authentik_media:
+  authentik_templates:
+
+services:
+  # =========================================================================
+  # TRAEFIK - Reverse Proxy & Load Balancer
+  # =========================================================================
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - homelab_network
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    environment:
+      - TZ=${TZ}
+      - CF_API_EMAIL=${CLOUDFLARE_EMAIL}
+      - CF_DNS_API_TOKEN=${CLOUDFLARE_API_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml:ro
+      - ./traefik/dynamic:/config:ro
+      - ./traefik/acme.json:/acme.json
+      - ./traefik/logs:/var/log/traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DASHBOARD_DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=cloudflare"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=authentik@file"
+
+  # =========================================================================
+  # AUTHENTIK SERVER - Identity Provider
+  # Connects to PostgreSQL/Redis on Host B (192.168.17.1)
+  # =========================================================================
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik-server
+    restart: unless-stopped
+    command: server
+    networks:
+      - homelab_network
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      # PostgreSQL on Host B
+      - AUTHENTIK_POSTGRESQL__HOST=${HOMELAB_IP_B:-192.168.17.1}
+      - AUTHENTIK_POSTGRESQL__PORT=5432
+      - AUTHENTIK_POSTGRESQL__NAME=${AUTHENTIK_POSTGRESQL_DB}
+      - AUTHENTIK_POSTGRESQL__USER=${AUTHENTIK_POSTGRESQL_USER}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_POSTGRESQL_PASSWORD}
+      # Redis on Host B
+      - AUTHENTIK_REDIS__HOST=${HOMELAB_IP_B:-192.168.17.1}
+      - AUTHENTIK_REDIS__PORT=6379
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+      - AUTHENTIK_LOG_LEVEL=info
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`${AUTHENTIK_DOMAIN}`)"
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.tls.certresolver=cloudflare"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+
+  # =========================================================================
+  # AUTHENTIK WORKER - Background Tasks
+  # =========================================================================
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    networks:
+      - homelab_network
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      # PostgreSQL on Host B
+      - AUTHENTIK_POSTGRESQL__HOST=${HOMELAB_IP_B:-192.168.17.1}
+      - AUTHENTIK_POSTGRESQL__PORT=5432
+      - AUTHENTIK_POSTGRESQL__NAME=${AUTHENTIK_POSTGRESQL_DB}
+      - AUTHENTIK_POSTGRESQL__USER=${AUTHENTIK_POSTGRESQL_USER}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_POSTGRESQL_PASSWORD}
+      # Redis on Host B
+      - AUTHENTIK_REDIS__HOST=${HOMELAB_IP_B:-192.168.17.1}
+      - AUTHENTIK_REDIS__PORT=6379
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+
+  # =========================================================================
+  # PORTAINER - Docker GUI Management
+  # =========================================================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls.certresolver=cloudflare"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+volumes:
+  portainer_data:

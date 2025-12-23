@@ -1,0 +1,60 @@
+# Promtail Configuration
+# Homelab OSS Stack
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # System logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*log
+
+  # Docker container logs
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*.log
+    pipeline_stages:
+      - docker: {}
+      - json:
+          expressions:
+            output: log
+            stream: stream
+            attrs:
+      - labels:
+          stream:
+      - output:
+          source: output
+
+  # Traefik logs
+  - job_name: traefik
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: traefik
+          __path__: /opt/homelab/traefik/logs/*.log
+
+  # Home Assistant logs
+  - job_name: homeassistant
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: homeassistant
+          __path__: /opt/homelab/homeassistant/home-assistant.log

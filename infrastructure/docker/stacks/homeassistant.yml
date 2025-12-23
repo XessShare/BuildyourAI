@@ -1,0 +1,177 @@
+version: '3.9'
+
+# Home Assistant Stack
+# - Home Assistant (Smart Home Hub)
+# - Mosquitto (MQTT Broker)
+# - Zigbee2MQTT (Zigbee Bridge)
+# - Node-RED (Flow Automation)
+# - ESPHome (DIY Sensors)
+
+networks:
+  homelab_network:
+    external: true
+  iot_network:
+    internal: true
+
+volumes:
+  homeassistant_config:
+  mosquitto_data:
+  mosquitto_logs:
+  zigbee2mqtt_data:
+  nodered_data:
+  esphome_config:
+
+services:
+  # =========================================================================
+  # MOSQUITTO - MQTT Broker
+  # =========================================================================
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    networks:
+      - homelab_network
+      - iot_network
+    ports:
+      - "1883:1883"  # MQTT
+      - "9001:9001"  # WebSocket
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/passwd:/mosquitto/config/passwd:ro
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =========================================================================
+  # HOME ASSISTANT - Smart Home Hub
+  # =========================================================================
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host  # Required for mDNS discovery
+    privileged: true  # Required for USB device access
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - homeassistant_config:/config
+      - /run/dbus:/run/dbus:ro  # For Bluetooth
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0  # Zigbee/Z-Wave dongle (adjust as needed)
+    depends_on:
+      - mosquitto
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homeassistant.rule=Host(`${HA_DOMAIN}`)"
+      - "traefik.http.routers.homeassistant.entrypoints=websecure"
+      - "traefik.http.routers.homeassistant.tls.certresolver=cloudflare"
+      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
+
+  # =========================================================================
+  # ZIGBEE2MQTT - Zigbee to MQTT Bridge
+  # =========================================================================
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    container_name: zigbee2mqtt
+    restart: unless-stopped
+    networks:
+      - iot_network
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - zigbee2mqtt_data:/app/data
+      - /run/udev:/run/udev:ro
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0  # Zigbee adapter (ConBee II, Sonoff, etc.)
+    depends_on:
+      - mosquitto
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.zigbee2mqtt.rule=Host(`zigbee.${DOMAIN}`)"
+      - "traefik.http.routers.zigbee2mqtt.entrypoints=websecure"
+      - "traefik.http.routers.zigbee2mqtt.tls.certresolver=cloudflare"
+      - "traefik.http.services.zigbee2mqtt.loadbalancer.server.port=8080"
+      - "traefik.http.routers.zigbee2mqtt.middlewares=authentik@file"
+
+  # =========================================================================
+  # NODE-RED - Flow-based Automation
+  # =========================================================================
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: unless-stopped
+    networks:
+      - homelab_network
+      - iot_network
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - nodered_data:/data
+    depends_on:
+      - mosquitto
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nodered.rule=Host(`nodered.${DOMAIN}`)"
+      - "traefik.http.routers.nodered.entrypoints=websecure"
+      - "traefik.http.routers.nodered.tls.certresolver=cloudflare"
+      - "traefik.http.services.nodered.loadbalancer.server.port=1880"
+      - "traefik.http.routers.nodered.middlewares=authentik@file"
+
+  # =========================================================================
+  # ESPHOME - ESP32/ESP8266 Firmware Manager
+  # =========================================================================
+  esphome:
+    image: ghcr.io/esphome/esphome:latest
+    container_name: esphome
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - esphome_config:/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.esphome.rule=Host(`esphome.${DOMAIN}`)"
+      - "traefik.http.routers.esphome.entrypoints=websecure"
+      - "traefik.http.routers.esphome.tls.certresolver=cloudflare"
+      - "traefik.http.services.esphome.loadbalancer.server.port=6052"
+      - "traefik.http.routers.esphome.middlewares=authentik@file"
+
+  # =========================================================================
+  # FRIGATE NVR - AI Camera System (Optional)
+  # =========================================================================
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: frigate
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - homelab_network
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - frigate_config:/config
+      - frigate_media:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000  # 1GB
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128  # Intel GPU
+      - /dev/apex_0:/dev/apex_0  # Google Coral TPU (optional)
+    shm_size: "256mb"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frigate.rule=Host(`cameras.${DOMAIN}`)"
+      - "traefik.http.routers.frigate.entrypoints=websecure"
+      - "traefik.http.routers.frigate.tls.certresolver=cloudflare"
+      - "traefik.http.services.frigate.loadbalancer.server.port=5000"
+      - "traefik.http.routers.frigate.middlewares=authentik@file"
+
+volumes:
+  frigate_config:
+  frigate_media:

@@ -1,0 +1,72 @@
+# Prometheus Configuration
+# Homelab OSS Stack
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'homelab'
+    datacenter: 'local'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "/etc/prometheus/alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter - Host A (pve-thinkpad)
+  - job_name: 'node-exporter-hostA'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          instance: 'pve-thinkpad'
+          host: '192.168.16.7'
+
+  # Node Exporter - Host B (pve-ryzen)
+  - job_name: 'node-exporter-hostB'
+    static_configs:
+      - targets: ['192.168.17.1:9100']
+        labels:
+          instance: 'pve-ryzen'
+          host: '192.168.17.1'
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Traefik metrics
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:8080']
+
+  # Home Assistant
+  - job_name: 'home-assistant'
+    metrics_path: '/api/prometheus'
+    bearer_token_file: /run/secrets/ha_token
+    static_configs:
+      - targets: ['homeassistant:8123']
+    tls_config:
+      insecure_skip_verify: true
+
+  # PostgreSQL Exporter (wenn deployed)
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Scrutiny - Disk health monitoring
+  - job_name: 'scrutiny'
+    static_configs:
+      - targets: ['scrutiny:8080']

@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  brainstorm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brainstorm-debug
+    command: sh
+    tty: true

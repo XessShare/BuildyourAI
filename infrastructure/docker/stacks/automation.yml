@@ -1,0 +1,154 @@
+version: '3.9'
+
+# Automation & AI Stack
+# - Pi-hole (DNS-based Ad Blocking)
+# - Ollama (Local LLM Inference)
+# - n8n (Workflow Automation)
+
+networks:
+  homelab_network:
+    external: true
+
+volumes:
+  pihole_config:
+  pihole_dnsmasq:
+  ollama_data:
+  n8n_data:
+
+services:
+  # =========================================================================
+  # PI-HOLE - Network-wide Ad Blocking via DNS
+  # =========================================================================
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    hostname: pihole
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - homelab_network
+    ports:
+      - "53:53/tcp"      # DNS
+      - "53:53/udp"      # DNS
+      - "8053:80/tcp"    # Web Interface (avoid conflict with Traefik)
+    environment:
+      - TZ=${TZ}
+      - WEBPASSWORD=${PIHOLE_PASSWORD}
+      - PIHOLE_DNS_=1.1.1.1;1.0.0.1  # Cloudflare DNS
+      - DNSSEC=true
+      - DNSMASQ_LISTENING=all
+      - VIRTUAL_HOST=pihole.${DOMAIN}
+      - VIRTUAL_PORT=80
+    volumes:
+      - pihole_config:/etc/pihole
+      - pihole_dnsmasq:/etc/dnsmasq.d
+    cap_add:
+      - NET_ADMIN
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.${DOMAIN}`)"
+      - "traefik.http.routers.pihole.entrypoints=websecure"
+      - "traefik.http.routers.pihole.tls.certresolver=cloudflare"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+      - "traefik.http.routers.pihole.middlewares=authentik@file"
+
+  # =========================================================================
+  # OLLAMA - Local LLM Inference Engine
+  # =========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    ports:
+      - "11434:11434"  # Ollama API
+    environment:
+      - TZ=${TZ}
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    volumes:
+      - ollama_data:/root/.ollama
+    # Optional: GPU support (requires NVIDIA GPU + nvidia-docker2)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ollama.rule=Host(`ollama.${DOMAIN}`)"
+      - "traefik.http.routers.ollama.entrypoints=websecure"
+      - "traefik.http.routers.ollama.tls.certresolver=cloudflare"
+      - "traefik.http.services.ollama.loadbalancer.server.port=11434"
+      - "traefik.http.routers.ollama.middlewares=authentik@file"
+
+  # =========================================================================
+  # OLLAMA WEB UI - Browser Interface for Ollama
+  # =========================================================================
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ollama-webui
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    ports:
+      - "8081:8080"  # Changed from 8080 to avoid conflict with Traefik dashboard
+    environment:
+      - TZ=${TZ}
+      - OLLAMA_API_BASE_URL=http://ollama:11434/api
+      - WEBUI_AUTH=false  # Authentik handles auth
+    volumes:
+      - ollama_data:/app/backend/data
+    depends_on:
+      - ollama
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ollama-webui.rule=Host(`ai.${DOMAIN}`)"
+      - "traefik.http.routers.ollama-webui.entrypoints=websecure"
+      - "traefik.http.routers.ollama-webui.tls.certresolver=cloudflare"
+      - "traefik.http.services.ollama-webui.loadbalancer.server.port=8080"
+      - "traefik.http.routers.ollama-webui.middlewares=authentik@file"
+
+  # =========================================================================
+  # N8N - Workflow Automation Platform
+  # =========================================================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    ports:
+      - "5678:5678"
+    environment:
+      - TZ=${TZ}
+      - N8N_HOST=n8n.${DOMAIN}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://n8n.${DOMAIN}
+      - GENERIC_TIMEZONE=${TZ}
+      # Authentication via Authentik
+      - N8N_DISABLE_UI=false
+      # Database (optional - uses SQLite by default)
+      # - DB_TYPE=postgresdb
+      # - DB_POSTGRESDB_HOST=postgresql
+      # - DB_POSTGRESDB_PORT=5432
+      # - DB_POSTGRESDB_DATABASE=${N8N_DB_NAME}
+      # - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      # - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`n8n.${DOMAIN}`)"
+      - "traefik.http.routers.n8n.entrypoints=websecure"
+      - "traefik.http.routers.n8n.tls.certresolver=cloudflare"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+      - "traefik.http.routers.n8n.middlewares=authentik@file"

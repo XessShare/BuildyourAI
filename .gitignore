@@ -1,0 +1,72 @@
+# ========================================
+# Homelab .gitignore
+# ========================================
+
+# === SECRETS (CRITICAL - NEVER COMMIT!) ===
+.env
+.env.*
+shared/secrets/
+**/.env.production
+**/.env.master
+**/passwords.txt
+**/*secret*
+**/*token*
+**/*key*.pem
+**/*.key
+**/*.crt
+**/*.p12
+
+# === Python ===
+ai-platform/ai-agents-masterclass/
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/.pytest_cache/
+**/venv/
+**/.ipynb_checkpoints/
+
+# === Logs ===
+**/logs/
+**/*.log
+**/log/
+
+# === Docker ===
+**/data/
+**/volumes/
+**/.docker/
+
+# === Backups ===
+**/*.bak
+**/*.backup
+**/*.old
+**/*.swp
+**/*.swo
+*~
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+
+# === Terraform ===
+infrastructure/terraform/**/.terraform/
+infrastructure/terraform/**/*.tfstate
+infrastructure/terraform/**/*.tfstate.backup
+infrastructure/terraform/**/.terraform.lock.hcl
+
+# === Ansible ===
+**/*.retry
+**/vault_password.txt
+
+# === Node.js (for n8n, Node-RED) ===
+**/node_modules/
+
+# === Documentation builds ===
+**/site/
+**/_build/

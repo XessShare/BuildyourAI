@@ -1,0 +1,28 @@
+# Grafana Dashboards Provisioning
+# Homelab OSS Stack
+
+apiVersion: 1
+
+providers:
+  # Dashboard files from /etc/grafana/dashboards
+  - name: 'default'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: true
+
+  # Homelab specific dashboards
+  - name: 'homelab'
+    orgId: 1
+    folder: 'Homelab'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards/homelab

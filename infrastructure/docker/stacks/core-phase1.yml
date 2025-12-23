@@ -1,0 +1,67 @@
+version: '3.9'
+
+# Core Infrastructure Stack - Phase 1
+# IP-based deployment without SSL
+# - Traefik (Reverse Proxy)
+# - Portainer (Docker Management)
+# NOTE: Authentik requires PostgreSQL from Host B (Agent 2) - will be added in Phase 2
+
+networks:
+  homelab_network:
+    external: true
+
+volumes:
+  portainer_data:
+
+services:
+  # =========================================================================
+  # TRAEFIK - Reverse Proxy (HTTP only, no SSL)
+  # =========================================================================
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - homelab_network
+    ports:
+      - "80:80"
+      - "8080:8080"  # Dashboard
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/homelab/traefik/traefik.yml:/traefik.yml:ro
+      - /opt/homelab/traefik/dynamic:/config:ro
+      - /opt/homelab/traefik/logs:/var/log/traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.homelab.local`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+  # =========================================================================
+  # PORTAINER - Docker Management UI
+  # =========================================================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - homelab_network
+    ports:
+      - "9443:9443"
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    environment:
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.homelab.local`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
