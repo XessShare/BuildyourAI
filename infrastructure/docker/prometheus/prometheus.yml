@@ -70,3 +70,9 @@ scrape_configs:
   - job_name: 'scrutiny'
     static_configs:
       - targets: ['scrutiny:8080']
+
+  # AdGuard Home - DNS Ad-Blocking Stats
+  - job_name: 'adguardhome'
+    static_configs:
+      - targets: ['adguardhome:80']
+    metrics_path: '/control/stats'
