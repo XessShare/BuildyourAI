@@ -30,3 +30,7 @@ tenacity>=8.2.0
 # Vector Database
 chromadb>=0.4.0
 sentence-transformers>=2.0.0
+
+# Visualization (optional)
+watchdog>=3.0.0  # Für automatische Datei-Überwachung
+cairosvg>=2.7.0  # Für SVG zu PNG Konvertierung (optional)
