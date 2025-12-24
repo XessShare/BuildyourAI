@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architektur Mindmap - brainstorm-repository-workflow-automatisierung.plan</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        #mindmap-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        #search {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex: 1;
+            max-width: 300px;
+        }
+        .tag-filter {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tag-filter:hover {
+            background: #f0f0f0;
+        }
+        .tag-filter.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .chat-snapshot {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .snapshot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .snapshot-content {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .tag {
+            padding: 2px 8px;
+            background: #e3f2fd;
+            border-radius: 3px;
+            font-size: 0.85em;
+            color: #1976d2;
+        }
+        #chat-snapshots {
+            margin-top: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Architektur Mindmap - brainstorm-repository-workflow-automatisierung.plan</h1>
+    <div class="controls">
+        <input type="text" id="search" placeholder="Suche...">
+        <div id="tag-filters"></div>
+    </div>
+    <div id="mindmap-container"></div>
+    <div id="chat-snapshots"></div>
+
+    <script type="text/javascript">
+        // Daten
+        const nodes = new vis.DataSet([
+  {
+    "id": "0",
+    "label": "Ziel",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "1",
+    "label": "Architektur-Übersicht",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "2",
+    "label": "OSS Workflow-Automatisierungstools",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "3",
+    "label": "1. n8n",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "4",
+    "label": "2. Apache Airflow",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "5",
+    "label": "3. Prefect",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "6",
+    "label": "4. Temporal",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "7",
+    "label": "5. Camunda",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "8",
+    "label": "6. Argo Workflows",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "9",
+    "label": "Vergleichsmatrix",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "10",
+    "label": "Use Cases für Workflow-zu-Workflow-Automatisierung",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "11",
+    "label": "Use Case 1: CI/CD Pipeline Orchestrierung",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "12",
+    "label": "Use Case 2: Multi-Platform Deployment",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "13",
+    "label": "Use Case 3: Event-basierte Workflow-Ketten",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "14",
+    "label": "Use Case 4: Data Pipeline Orchestrierung",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "15",
+    "label": "Integrationsmuster",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "16",
+    "label": "Pattern 1: Webhook-basierte Integration",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "17",
+    "label": "Pattern 2: Message Queue Integration",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "18",
+    "label": "Pattern 3: API-basierte Integration",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "19",
+    "label": "Pattern 4: Event Bus Integration",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "20",
+    "label": "Repository-Struktur",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "21",
+    "label": "Implementierungsplan",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "22",
+    "label": "Phase 1: Recherche & Dokumentation (Woche 1-2)",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "23",
+    "label": "Phase 2: Evaluation (Woche 3-4)",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "24",
+    "label": "Phase 3: Empfehlung & Implementierung (Woche 5-6)",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "25",
+    "label": "Entscheidungskriterien",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "26",
+    "label": "Für einfache Workflow-zu-Workflow-Integration:",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "27",
+    "label": "Für Data Pipeline Orchestrierung:",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "28",
+    "label": "Für Microservice-Orchestrierung:",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "29",
+    "label": "Für Kubernetes-native Workflows:",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "30",
+    "label": "Nächste Schritte",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "31",
+    "label": "Ressourcen",
+    "title": "",
+    "group": "section"
+  },
+  {
+    "id": "32",
+    "label": "Validierung",
+    "title": "",
+    "group": "section"
+  }
+]);
+        const edges = new vis.DataSet([
+  {
+    "id": "e0",
+    "from": "0",
+    "to": "1",
+    "label": ""
+  },
+  {
+    "id": "e1",
+    "from": "1",
+    "to": "2",
+    "label": ""
+  },
+  {
+    "id": "e2",
+    "from": "2",
+    "to": "3",
+    "label": ""
+  },
+  {
+    "id": "e3",
+    "from": "3",
+    "to": "4",
+    "label": ""
+  },
+  {
+    "id": "e4",
+    "from": "4",
+    "to": "5",
+    "label": ""
+  },
+  {
+    "id": "e5",
+    "from": "5",
+    "to": "6",
+    "label": ""
+  },
+  {
+    "id": "e6",
+    "from": "6",
+    "to": "7",
+    "label": ""
+  },
+  {
+    "id": "e7",
+    "from": "7",
+    "to": "8",
+    "label": ""
+  },
+  {
+    "id": "e8",
+    "from": "8",
+    "to": "9",
+    "label": ""
+  },
+  {
+    "id": "e9",
+    "from": "9",
+    "to": "10",
+    "label": ""
+  },
+  {
+    "id": "e10",
+    "from": "10",
+    "to": "11",
+    "label": ""
+  },
+  {
+    "id": "e11",
+    "from": "11",
+    "to": "12",
+    "label": ""
+  },
+  {
+    "id": "e12",
+    "from": "12",
+    "to": "13",
+    "label": ""
+  },
+  {
+    "id": "e13",
+    "from": "13",
+    "to": "14",
+    "label": ""
+  },
+  {
+    "id": "e14",
+    "from": "14",
+    "to": "15",
+    "label": ""
+  },
+  {
+    "id": "e15",
+    "from": "15",
+    "to": "16",
+    "label": ""
+  },
+  {
+    "id": "e16",
+    "from": "16",
+    "to": "17",
+    "label": ""
+  },
+  {
+    "id": "e17",
+    "from": "17",
+    "to": "18",
+    "label": ""
+  },
+  {
+    "id": "e18",
+    "from": "18",
+    "to": "19",
+    "label": ""
+  },
+  {
+    "id": "e19",
+    "from": "19",
+    "to": "20",
+    "label": ""
+  },
+  {
+    "id": "e20",
+    "from": "20",
+    "to": "21",
+    "label": ""
+  },
+  {
+    "id": "e21",
+    "from": "21",
+    "to": "22",
+    "label": ""
+  },
+  {
+    "id": "e22",
+    "from": "22",
+    "to": "23",
+    "label": ""
+  },
+  {
+    "id": "e23",
+    "from": "23",
+    "to": "24",
+    "label": ""
+  },
+  {
+    "id": "e24",
+    "from": "24",
+    "to": "25",
+    "label": ""
+  },
+  {
+    "id": "e25",
+    "from": "25",
+    "to": "26",
+    "label": ""
+  },
+  {
+    "id": "e26",
+    "from": "26",
+    "to": "27",
+    "label": ""
+  },
+  {
+    "id": "e27",
+    "from": "27",
+    "to": "28",
+    "label": ""
+  },
+  {
+    "id": "e28",
+    "from": "28",
+    "to": "29",
+    "label": ""
+  },
+  {
+    "id": "e29",
+    "from": "29",
+    "to": "30",
+    "label": ""
+  },
+  {
+    "id": "e30",
+    "from": "30",
+    "to": "31",
+    "label": ""
+  },
+  {
+    "id": "e31",
+    "from": "31",
+    "to": "32",
+    "label": ""
+  }
+]);
+        const chatSnapshots = {};
+        const tags = {
+  "0": [],
+  "1": [],
+  "2": [],
+  "3": [],
+  "4": [],
+  "5": [],
+  "6": [],
+  "7": [],
+  "8": [],
+  "9": [
+    "Vergleichsmatrix"
+  ],
+  "10": [],
+  "11": [],
+  "12": [],
+  "13": [],
+  "14": [],
+  "15": [],
+  "16": [],
+  "17": [],
+  "18": [],
+  "19": [],
+  "20": [],
+  "21": [],
+  "22": [
+    "Dokumentation"
+  ],
+  "23": [],
+  "24": [],
+  "25": [],
+  "26": [],
+  "27": [],
+  "28": [],
+  "29": [],
+  "30": [],
+  "31": [],
+  "32": []
+};
+
+        // Netzwerk erstellen
+        const container = document.getElementById('mindmap-container');
+        const data = { nodes: nodes, edges: edges };
+        const options = {
+            nodes: {
+                shape: 'box',
+                font: { size: 14 },
+                borderWidth: 2,
+                shadow: true,
+                color: {
+                    border: '#2B7CE9',
+                    background: '#97C2FC',
+                    highlight: {
+                        border: '#2B7CE9',
+                        background: '#D2E5FF'
+                    }
+                }
+            },
+            edges: {
+                arrows: { to: { enabled: true } },
+                smooth: { type: 'continuous' },
+                color: { color: '#848484' }
+            },
+            layout: {
+                hierarchical: {
+                    direction: 'UD',
+                    sortMethod: 'directed',
+                    levelSeparation: 100,
+                    nodeSpacing: 150
+                }
+            },
+            physics: {
+                enabled: false
+            },
+            interaction: {
+                dragNodes: true,
+                zoomView: true,
+                dragView: true
+            }
+        };
+
+        const network = new vis.Network(container, data, options);
+
+        // Chat-Snapshots anzeigen wenn Knoten geklickt wird
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                displayChatSnapshots(nodeId);
+            }
+        });
+
+        function displayChatSnapshots(nodeId) {
+            const container = document.getElementById('chat-snapshots');
+            const snapshots = chatSnapshots[nodeId] || [];
+            
+            if (snapshots.length === 0) {
+                container.innerHTML = '<p>Keine Chat-Snapshots für diesen Knoten.</p>';
+                return;
+            }
+
+            let html = '<h2>Chat-Snapshots</h2>';
+            snapshots.forEach((snapshot, index) => {
+                const snapshotTags = snapshot.tags || [];
+                html += `
+                    <div class="chat-snapshot" data-timestamp="${snapshot.timestamp || ''}" data-tags="${snapshotTags.join(',')}">
+                        <div class="snapshot-header">
+                            <span class="timestamp">${snapshot.timestamp || ''}</span>
+                            <div class="tags">
+                                ${snapshotTags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="snapshot-content">${escapeHtml(snapshot.content || '')}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Tag-Filter
+        const allTags = new Set();
+        Object.values(tags).forEach(tagList => {
+            tagList.forEach(tag => allTags.add(tag));
+        });
+
+        const tagFiltersContainer = document.getElementById('tag-filters');
+        allTags.forEach(tag => {
+            const button = document.createElement('button');
+            button.className = 'tag-filter';
+            button.textContent = tag;
+            button.onclick = () => filterByTag(tag, button);
+            tagFiltersContainer.appendChild(button);
+        });
+
+        function filterByTag(tag, button) {
+            button.classList.toggle('active');
+            const activeTags = Array.from(document.querySelectorAll('.tag-filter.active'))
+                .map(btn => btn.textContent);
+            
+            if (activeTags.length === 0) {
+                nodes.forEach(node => node.hidden = false);
+            } else {
+                nodes.forEach(node => {
+                    const nodeTags = tags[node.id] || [];
+                    node.hidden = !activeTags.some(t => nodeTags.includes(t));
+                });
+            }
+        }
+
+        // Suche
+        document.getElementById('search').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            if (query === '') {
+                nodes.forEach(node => node.hidden = false);
+                return;
+            }
+            nodes.forEach(node => {
+                const label = (node.label || '').toLowerCase();
+                const title = (node.title || '').toLowerCase();
+                node.hidden = !(label.includes(query) || title.includes(query));
+            });
+        });
+    </script>
+</body>
+</html>
+

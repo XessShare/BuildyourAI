@@ -7,6 +7,9 @@ Spezialisierte Agenten für:
 - Research & Analysis
 - Verification & QA
 - Communication Optimization
+- Deployment Orchestration
+- Code Generation (NEW)
+- Resource Management (NEW)
 """
 
 from .base_agent import BaseAgent
@@ -16,6 +19,10 @@ from .content_creator_agent import ContentCreatorAgent
 from .researcher_agent import ResearcherAgent
 from .verifier_agent import VerifierAgent
 from .analyst_agent import AnalystAgent
+from .deployment_orchestrator import DeploymentOrchestratorAgent
+from .webhook_handler import WebhookHandlerAgent
+from .code_generation_agent import CodeGenerationAgent
+from .resource_manager import ResourceManager
 
 __all__ = [
     'BaseAgent',
@@ -25,6 +32,10 @@ __all__ = [
     'ResearcherAgent',
     'VerifierAgent',
     'AnalystAgent',
+    'DeploymentOrchestratorAgent',
+    'WebhookHandlerAgent',
+    'CodeGenerationAgent',
+    'ResourceManager',
 ]
 
-__version__ = '0.1.0'
+__version__ = '0.4.0'

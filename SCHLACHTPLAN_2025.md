@@ -408,27 +408,48 @@ AGENT_CONFIG.update({
     └── docker-compose.yml          # J-Jeco AI Agents Stack (neu)
 ```
 
-**Root-Level docker-compose.yml (überarbeiten):**
+**Root-Level docker-compose.yml (YAML Anchors Pattern):**
 
 ```yaml
 version: '3.9'
 
 # Homelab OSS Stack - Root Orchestration
-# Verweist auf spezifische Stacks in infrastructure/docker/stacks/
+# YAML Anchors für DRY (Don't Repeat Yourself)
+
+# Common service defaults
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  networks:
+    - homelab_network
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+networks:
+  homelab_network:
+    external: true
 
 services:
-  # Core Infrastructure (Host A)
+  # Core Infrastructure (Host A) - uses anchors
   traefik:
-    extends:
-      file: infrastructure/docker/stacks/core.yml
-      service: traefik
-  
-  # AI Platform (Host B)
+    <<: *service-defaults
+    image: traefik:v3.0
+    container_name: traefik
+    # ... weitere Traefik-spezifische Config
+
+  # AI Platform (Host B) - uses anchors
   jjeco-agents:
-    extends:
-      file: ai-platform/docker-compose.yml
-      service: agents
+    <<: *service-defaults
+    build:
+      context: ./ai-platform
+      dockerfile: Dockerfile
+    container_name: jjeco-agents
+    # ... weitere Agent-spezifische Config
 ```
+
+**Note:** YAML anchors (`&` und `*`) sind in Compose v3.9 unterstützt und DRY-freundlicher als `extends`.
 
 ---
 
@@ -782,6 +803,107 @@ services:
           memory: 4G
 ```
 
+### 9.3 OpenCode/Code-X Integration & Claude Resource Management
+
+**Architektur:**
+
+Das System nutzt intelligentes Resource-Management für optimale Tool-Auswahl:
+
+- **Claude (Privilegiert)**: Nur für Architektur-Entscheidungen, komplexe Problem-Lösung, strategische Planung
+- **OpenCode/Code-X**: Für Standard Code-Generierung, Refactoring, Bug-Fixes
+- **GPT-4o-mini**: Fallback für einfache Tasks und wenn lokale Tools nicht verfügbar
+
+**Konfiguration:**
+
+```python
+# config.py
+OPENCODE_PATH = os.getenv("OPENCODE_PATH", shutil.which("opencode") or "")
+CODEX_PATH = os.getenv("CODEX_PATH", shutil.which("codex") or "")
+
+CLAUDE_RESOURCE_POLICY = {
+    "enabled": True,
+    "privileged_task_types": [
+        "architectural_decisions",
+        "complex_problem_solving",
+        "strategic_planning"
+    ],
+    "daily_quota": 50,  # Max requests per day
+    "hourly_quota": 10,  # Max requests per hour
+    "fallback_model": "gpt-4o-mini"
+}
+```
+
+**Verwendung:**
+
+```python
+from agents.resource_manager import ResourceManager
+from agents.code_generation_agent import CodeGenerationAgent
+
+# Resource Manager für intelligentes Routing
+rm = ResourceManager()
+
+# Task klassifizieren
+task = {
+    "type": "code_generation",
+    "description": "Generate Python function",
+    "language": "python"
+}
+
+routing = rm.route_task(task)
+# Returns: {"tool": "opencode", "priority": "STANDARD", "reason": "..."}
+
+# Code-Generation-Agent nutzen
+code_agent = CodeGenerationAgent()
+result = await code_agent.generate_code(task)
+```
+
+**Integration in bestehende Agents:**
+
+```python
+# Project Manager Agent
+from agents.project_manager_agent import ProjectManagerAgent
+
+pm = ProjectManagerAgent()
+
+# Delegiert Code-Generierung automatisch
+result = await pm.delegate_code_generation({
+    "type": "generate_code",
+    "description": "Create deployment script",
+    "language": "bash"
+})
+
+# Deployment Orchestrator
+from agents.deployment_orchestrator import DeploymentOrchestratorAgent
+
+deploy = DeploymentOrchestratorAgent()
+
+# Generiert Deployment-Scripts mit intelligentem Routing
+script = await deploy.generate_deployment_script({
+    "type": "generate_code",
+    "description": "Docker Compose deployment",
+    "language": "yaml",
+    "complexity": "standard"
+})
+```
+
+**Resource-Statistiken:**
+
+```python
+# Resource-Nutzung überwachen
+stats = rm.get_resource_stats()
+
+print(f"Claude Quota: {stats['claude']['quota_status']}")
+print(f"OpenCode Available: {stats['local_tools']['opencode']['available']}")
+print(f"CodeX Available: {stats['local_tools']['codex']['available']}")
+```
+
+**Best Practices:**
+
+1. **Claude sparsam nutzen**: Nur für wirklich komplexe/architektonische Aufgaben
+2. **OpenCode bevorzugen**: Für Standard Code-Generierung lokale Tools nutzen
+3. **Fallback aktivieren**: LLM-Fallback für Verfügbarkeit sicherstellen
+4. **Quota überwachen**: Regelmäßig Resource-Statistiken prüfen
+
 ---
 
 ## ✅ Phase 10: Checkliste & Validierung
@@ -834,7 +956,29 @@ python -m agents.researcher_agent --test
 
 # Verifier
 python -m agents.verifier_agent --test
+
+# Resource Management & Code Generation
+python test_resource_management.py
 ```
+
+### 10.4 Resource-Management-Tests
+
+```bash
+# Teste Resource-Manager
+cd /home/fitna/homelab/ai-platform/1-first-agent
+python test_resource_management.py
+
+# Oder mit pytest
+pytest test_resource_management.py -v
+```
+
+**Test-Coverage:**
+
+- Task-Klassifizierung (PRIVILEGED, STANDARD, SIMPLE)
+- Claude-Quota-Management
+- Routing-Logik (Claude vs. OpenCode vs. GPT-4o-mini)
+- Code-Generation mit Fallback
+- Integration in bestehende Agents
 
 ---
 
