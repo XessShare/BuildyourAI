@@ -4,6 +4,7 @@ Zentrale Konfiguration für alle AI-Agenten und Services
 """
 
 import os
+import shutil
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -81,6 +82,26 @@ AGENT_CONFIG = {
         "model": DEFAULT_MODEL,  # Using GPT-4o-mini for reliable analysis
         "temperature": 0.3,
         "role": "Data analysis and insights extraction"
+    },
+    # CD/CI Deployment Agents
+    "deployment_orchestrator": {
+        "model": CLAUDE_MODEL,
+        "temperature": 0.3,
+        "role": "CD/CI Deployment Orchestrator",
+        "systems": ["vps", "thinkpad", "rtx1080"],
+        "location": "multi-system"
+    },
+    "webhook_handler": {
+        "model": DEFAULT_MODEL,
+        "temperature": 0.2,
+        "role": "Webhook reception and routing",
+        "location": "vps"
+    },
+    "testing_agent": {
+        "model": DEFAULT_MODEL,
+        "temperature": 0.3,
+        "role": "Automated testing and validation",
+        "location": "thinkpad"
     }
 }
 
@@ -134,3 +155,56 @@ KPI_TARGETS = {
     "month_12": {"subscribers": 10000, "videos": 12, "newsletters": 24},
     "month_18": {"subscribers": 100000, "videos": 18, "newsletters": 36}
 }
+
+# Code Generation Tools Configuration
+# OpenCode and Code-X are local CLI tools for code generation
+OPENCODE_PATH = os.getenv("OPENCODE_PATH", shutil.which("opencode") or "")
+CODEX_PATH = os.getenv("CODEX_PATH", shutil.which("codex") or shutil.which("code-x") or "")
+
+# Claude Resource Management Policy
+# Claude is reserved for privileged tasks only
+CLAUDE_RESOURCE_POLICY = {
+    "enabled": True,
+    "privileged_task_types": [
+        "architectural_decisions",
+        "complex_problem_solving",
+        "strategic_planning",
+        "system_design",
+        "critical_reasoning"
+    ],
+    "daily_quota": int(os.getenv("CLAUDE_DAILY_QUOTA", "50")),  # Max requests per day
+    "hourly_quota": int(os.getenv("CLAUDE_HOURLY_QUOTA", "10")),  # Max requests per hour
+    "fallback_model": DEFAULT_MODEL,  # Fallback if quota exceeded
+    "require_approval": False  # Set to True for manual approval of Claude usage
+}
+
+# Code Generation Agent Configuration
+CODE_GENERATION_AGENT_CONFIG = {
+    "model": DEFAULT_MODEL,  # Fallback model
+    "temperature": 0.3,
+    "role": "Code generation and refactoring using local tools",
+    "preferred_tool": "opencode",  # Preferred tool: opencode, codex, or llm
+    "fallback_to_llm": True,  # Fallback to LLM if tools unavailable
+    "timeout_seconds": 30,  # Timeout for CLI tool execution
+    "max_retries": 2
+}
+
+# Task Classification Rules
+TASK_CLASSIFICATION = {
+    "PRIVILEGED": {
+        "keywords": ["architecture", "design", "strategic", "complex", "critical", "system"],
+        "use_claude": True,
+        "priority": 1
+    },
+    "STANDARD": {
+        "keywords": ["code", "generate", "refactor", "implement", "create"],
+        "use_opencode": True,
+        "priority": 2
+    },
+    "SIMPLE": {
+        "keywords": ["fix", "review", "simple", "quick", "minor"],
+        "use_gpt_mini": True,
+        "priority": 3
+    }
+}
+

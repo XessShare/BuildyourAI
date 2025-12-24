@@ -18,6 +18,17 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 from config import AGENT_CONFIG, LOGS_DIR, OPENAI_API_KEY, ANTHROPIC_API_KEY
 
+# Lazy import to avoid circular dependencies
+_resource_manager = None
+
+def _get_resource_manager():
+    """Lazy initialization of ResourceManager"""
+    global _resource_manager
+    if _resource_manager is None:
+        from .resource_manager import ResourceManager
+        _resource_manager = ResourceManager()
+    return _resource_manager
+
 
 class BaseAgent(ABC):
     """
@@ -189,5 +200,46 @@ von anderen Agenten weiterverarbeitet - daher ist Struktur und Konsistenz wichti
         self.memory = []
         self.logger.info("Memory cleared")
 
+    def should_use_claude(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Prüft ob Claude für diesen Task verwendet werden soll
+        
+        Args:
+            task: Task-Dictionary
+            
+        Returns:
+            Dict mit use_claude (bool) und reason (str)
+        """
+        resource_manager = _get_resource_manager()
+        return resource_manager.should_use_claude(task)
+    
+    def route_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Routet Task zu passendem Tool (Claude, OpenCode, Code-X, GPT-4o-mini)
+        
+        Args:
+            task: Task-Dictionary
+            
+        Returns:
+            Dict mit tool, priority, reason
+        """
+        resource_manager = _get_resource_manager()
+        return resource_manager.route_task(task)
+    
+    async def use_local_tool(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Nutzt lokale Tools (OpenCode/Code-X) für Code-Generierung
+        
+        Args:
+            task: Task-Dictionary
+            
+        Returns:
+            Dict mit generiertem Code oder Error
+        """
+        from .code_generation_agent import CodeGenerationAgent
+        
+        code_agent = CodeGenerationAgent()
+        return await code_agent.execute(task)
+    
     def __repr__(self):
         return f"<{self.__class__.__name__}(type={self.agent_type}, tasks={self.metrics['tasks_completed']})>"

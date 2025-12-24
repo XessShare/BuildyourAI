@@ -319,6 +319,46 @@ Format als knappe, action-orientierte Updates.
             "completion_rate": len(self.completed_tasks) / max(1, len(self.active_tasks) + len(self.completed_tasks)),
             "tasks": self.active_tasks[-5:]  # Last 5 tasks
         }
+    
+    async def delegate_code_generation(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Delegiert Code-Generierung an Code-Generation-Agent
+        
+        Nutzt Resource-Manager für intelligentes Routing:
+        - OpenCode/Code-X für Standard-Code
+        - Claude nur für Architektur-Entscheidungen
+        
+        Args:
+            task: Task-Dictionary mit type, description, language, etc.
+            
+        Returns:
+            Dict mit generiertem Code
+        """
+        # Prüfe ob Code-Generierung benötigt wird
+        routing = self.route_task(task)
+        
+        if routing["tool"] in ["opencode", "codex"]:
+            # Nutze lokale Tools
+            return await self.use_local_tool(task)
+        elif routing["tool"] == "claude":
+            # Nutze Claude für komplexe/architektonische Tasks
+            # Project Manager nutzt bereits Claude, daher kann er direkt denken
+            prompt = f"""Generate {task.get('language', 'python')} code based on:
+
+Description: {task.get('description', '')}
+Context: {task.get('context', '')}
+
+Provide clean, well-documented, production-ready code."""
+            code = await self.think(prompt)
+            return {
+                "success": True,
+                "code": code,
+                "method": "claude",
+                "priority": routing["priority"]
+            }
+        else:
+            # Fallback zu lokalen Tools oder LLM
+            return await self.use_local_tool(task)
 
 
 # Quick test

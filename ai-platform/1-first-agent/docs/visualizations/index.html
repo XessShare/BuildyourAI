@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architektur Visualisierungen</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .visualization-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .visualization-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .visualization-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .visualization-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .visualization-card a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .visualization-card a:hover {
+            background: #0056b3;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 3px;
+            font-size: 0.85em;
+            margin-right: 5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Architektur Visualisierungen</h1>
+        <p class="subtitle">Übersicht aller generierten Architektur-Diagramme und Mindmaps</p>
+        
+        <div id="visualizations-container">
+            <div class="empty-state">
+                <p>Lade Visualisierungen...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lade Visualisierungen dynamisch
+        async function loadVisualizations() {
+            const container = document.getElementById('visualizations-container');
+            
+            try {
+                // Suche nach HTML-Dateien im Verzeichnis
+                const response = await fetch('./');
+                const text = await response.text();
+                
+                // Parse HTML-Dateien (vereinfacht - in Produktion sollte ein API-Endpoint verwendet werden)
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                
+                // Finde alle Links zu HTML-Dateien
+                const links = Array.from(doc.querySelectorAll('a'))
+                    .filter(a => a.href.endsWith('.html') && a.href.includes('mindmap'))
+                    .map(a => ({
+                        name: a.textContent.trim(),
+                        url: a.href
+                    }));
+                
+                if (links.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>Noch keine Visualisierungen vorhanden.</p>
+                            <p>Visualisierungen werden automatisch beim Erstellen von Plänen generiert.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Erstelle Grid
+                container.innerHTML = '<div class="visualization-grid"></div>';
+                const grid = container.querySelector('.visualization-grid');
+                
+                links.forEach(viz => {
+                    const card = document.createElement('div');
+                    card.className = 'visualization-card';
+                    card.innerHTML = `
+                        <h3>${viz.name}</h3>
+                        <p>Interaktive Mindmap mit Chat-Snapshots</p>
+                        <span class="badge">Mindmap</span>
+                        <a href="${viz.url}" target="_blank">Öffnen</a>
+                    `;
+                    grid.appendChild(card);
+                });
+                
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>Fehler beim Laden der Visualisierungen.</p>
+                        <p>Bitte prüfen Sie die Konsole für Details.</p>
+                    </div>
+                `;
+                console.error('Fehler:', error);
+            }
+        }
+        
+        // Lade beim Seitenaufruf
+        loadVisualizations();
+    </script>
+</body>
+</html>
+
