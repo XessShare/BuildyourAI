@@ -19,12 +19,12 @@
   ```
 
 - [ ] **Required Variables to Set:**
-  - [x] `DOMAIN=Jonas-J.de	`
-  - [x] `HOMELAB_IP_A=192.168.16.7` (pve-thinkpad)
-  - [x] `HOMELAB_IP_B=192.168.17.1` (pve-ryzen)
-    - [x] `CLOUDFLARE_EMAIL=ai.jaeger@hotmail.com`
+  - [ ] `DOMAIN=your-domain.com`
+  - [ ] `HOMELAB_IP_A=192.168.16.7` (pve-thinkpad)
+  - [ ] `HOMELAB_IP_B=192.168.17.1` (pve-ryzen)
+  - [ ] `CLOUDFLARE_EMAIL=your-email@example.com`
   - [ ] `CLOUDFLARE_API_KEY=your-api-key`
-  - [ ] Open router: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
+  - [ ] `OPENROUTER_API_KEY=sk-or-v1-...` (generate at https://openrouter.ai/keys)
   - [ ] `AUTHENTIK_POSTGRESQL_PASSWORD=` (generate strong password)
   - [ ] `POSTGRES_PASSWORD=` (generate strong password)
   - [ ] `PIHOLE_PASSWORD=` (generate strong password)

@@ -70,3 +70,14 @@ infrastructure/terraform/**/.terraform.lock.hcl
 # === Documentation builds ===
 **/site/
 **/_build/
+
+# WireGuard secrets (CRITICAL - added 2025-12-25)
+wireguard/**/privatekey-*
+wireguard/**/presharedkey-*
+wireguard/**/*.conf
+wireguard/.donoteditthisfile
+
+# Pi-hole config with passwords
+pihole/etc-pihole/pihole.toml
+pihole/etc-pihole/config_backups/
+

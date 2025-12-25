@@ -10,7 +10,7 @@
 This is a **multi-component homelab infrastructure** combining:
 - **Homelab OSS Stack**: Production-ready infrastructure with 30+ self-hosted services
 - **J-Jeco AI Platform**: Multi-agent AI system for content creation and automation
-- **3-System Architecture**: VPS (91.107.198.37), ThinkPad (192.168.16.7), RTX1080 (192.168.17.1)
+- **3-System Architecture**: VPS (external), ThinkPad (192.168.16.7), RTX1080 (192.168.17.1)
 - **Proxmox VE**: Virtualization layer on physical hardware
 
 **Key Characteristics:**
@@ -257,7 +257,7 @@ Three-tier deployment:
 # Host mapping
 pve-thinkpad    → 192.168.16.7
 pve-ryzen       → 192.168.17.1
-jonas-homelab-vps → 91.107.198.37
+jonas-homelab-vps → [EXTERNAL_VPS_IP]
 
 # SSH config expected at: ~/.ssh/config
 # Key-based auth only (passwords disabled)
@@ -526,10 +526,10 @@ docker ps --filter "health=unhealthy"
 
 ### Must-Read Before Making Changes
 
-1. **infrastructure/README.md** (400 lines) - Complete infrastructure documentation
-2. **infrastructure/DEPLOYMENT.md** (600 lines) - Step-by-step deployment
+1. **infrastructure/README.md** - Complete infrastructure documentation
+2. **infrastructure/DEPLOYMENT.md** - Step-by-step deployment
 3. **infrastructure/PRE-DEPLOYMENT-CHECKLIST.md** - Critical pre-deployment steps
-4. **ai-platform/ARCHITECTURE.md** (500 lines) - AI system architecture
+4. **ai-platform/ARCHITECTURE.md** - AI system architecture
 5. **SCHLACHTPLAN_2025.md** - Strategic roadmap
 
 ### Architecture Diagrams
@@ -684,12 +684,8 @@ docker stats --no-stream
 - Python: 3.13+
 - Ansible: 2.15+
 
-**Git Status (as of conversation start):**
-- Branch: master
-- Modified files:
-  - ai-platform/ARCHITECTURE.md
-  - infrastructure/PRE-DEPLOYMENT-CHECKLIST.md
-- Untracked directories: .cursor/, pihole/, wireguard/, business-and-moonshot-guide/
+**Current Git State:**
+Check `git status` to see any uncommitted changes, modified files, and untracked directories before deployment.
 
 ---
 
