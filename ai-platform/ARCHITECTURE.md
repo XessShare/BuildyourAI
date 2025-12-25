@@ -496,4 +496,4 @@ A: Am Anfang ja, aber dann läuft es automatisch. Wie Auto fahren lernen!
 
 **Version:** 1.0
 **Created:** 2025-12-20
-**Für:** Jung & Alt, Anfänger & Profis
+**Für:** Jung & Alt, Anfänger & Profis0

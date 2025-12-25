@@ -19,12 +19,12 @@
   ```
 
 - [ ] **Required Variables to Set:**
-  - [ ] `DOMAIN=your-domain.com`
-  - [ ] `HOMELAB_IP_A=192.168.16.7` (pve-thinkpad)
-  - [ ] `HOMELAB_IP_B=192.168.17.1` (pve-ryzen)
-  - [ ] `CLOUDFLARE_EMAIL=your-email@example.com`
+  - [x] `DOMAIN=Jonas-J.de	`
+  - [x] `HOMELAB_IP_A=192.168.16.7` (pve-thinkpad)
+  - [x] `HOMELAB_IP_B=192.168.17.1` (pve-ryzen)
+    - [x] `CLOUDFLARE_EMAIL=ai.jaeger@hotmail.com`
   - [ ] `CLOUDFLARE_API_KEY=your-api-key`
-  - [ ] `AUTHENTIK_SECRET_KEY=` (generate random 50 chars)
+  - [ ] Open router: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
   - [ ] `AUTHENTIK_POSTGRESQL_PASSWORD=` (generate strong password)
   - [ ] `POSTGRES_PASSWORD=` (generate strong password)
   - [ ] `PIHOLE_PASSWORD=` (generate strong password)
@@ -34,7 +34,7 @@
   ```bash
   # Generate random 50-char secret
   openssl rand -base64 50
-
+  
   # Or use pwgen
   pwgen -s 32 1
   ```
@@ -347,6 +347,7 @@ docker compose logs
 ```
 
 **Support Resources:**
+
 - GitHub Issues: [Create Issue]
 - Documentation: See `docs/` directory
 - Troubleshooting: `docs/08-Troubleshooting.md`
