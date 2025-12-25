@@ -1,0 +1,174 @@
+version: '3.9'
+
+# Gaming PC AI Stack - AMD RX 6800 XT (16GB VRAM)
+# Ryzen 9 5900X (12C/24T) + 32GB RAM
+# Host: 192.168.16.2 (Arch Linux)
+# 24/7 Operation: YES
+
+networks:
+  homelab_network:
+    external: true
+
+volumes:
+  ollama_amd_data:
+  sd_webui_data:
+  sd_models:
+  comfyui_data:
+  comfyui_models:
+
+services:
+  # =========================================================================
+  # OLLAMA AMD - Large Language Models (70B parameter models)
+  # =========================================================================
+  ollama-amd:
+    image: ollama/ollama:rocm
+    container_name: ollama-amd
+    hostname: ollama-amd
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    ports:
+      - "11435:11434"  # Different port from RTX1080 Ollama (11434)
+    environment:
+      - TZ=Europe/Berlin
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0  # RX 6800 XT = gfx1030
+      - ROCR_VISIBLE_DEVICES=0
+      - GPU_DEVICE_ORDINAL=0
+    volumes:
+      - ollama_amd_data:/root/.ollama
+    devices:
+      - /dev/kfd:/dev/kfd        # ROCm kernel driver
+      - /dev/dri:/dev/dri        # AMD GPU access
+    group_add:
+      - video
+      - render
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ollama-amd.rule=Host(`ollama-amd.${DOMAIN}`)"
+      - "traefik.http.routers.ollama-amd.entrypoints=websecure"
+      - "traefik.http.routers.ollama-amd.tls.certresolver=cloudflare"
+      - "traefik.http.routers.ollama-amd.middlewares=authentik@file"
+      - "traefik.http.services.ollama-amd.loadbalancer.server.port=11434"
+
+  # =========================================================================
+  # STABLE DIFFUSION WEBUI - Image Generation (SDXL support)
+  # =========================================================================
+  stable-diffusion-webui:
+    image: ghcr.io/ai-dock/stable-diffusion-webui:rocm
+    container_name: stable-diffusion
+    hostname: sdwebui
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    ports:
+      - "7860:7860"
+    environment:
+      - TZ=Europe/Berlin
+      - WEBUI_PORT=7860
+      - WEBUI_HOSTNAME=0.0.0.0
+      - CLI_ARGS=--listen --enable-insecure-extension-access --api --xformers
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0
+      - ROCR_VISIBLE_DEVICES=0
+      - PYTORCH_HIP_ALLOC_CONF=garbage_collection_threshold:0.9,max_split_size_mb:512
+    volumes:
+      - sd_webui_data:/data
+      - sd_models:/data/models
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    deploy:
+      resources:
+        limits:
+          memory: 24G  # Leave 8GB for system
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sdwebui.rule=Host(`sd.${DOMAIN}`)"
+      - "traefik.http.routers.sdwebui.entrypoints=websecure"
+      - "traefik.http.routers.sdwebui.tls.certresolver=cloudflare"
+      - "traefik.http.routers.sdwebui.middlewares=authentik@file"
+      - "traefik.http.services.sdwebui.loadbalancer.server.port=7860"
+
+  # =========================================================================
+  # COMFYUI - Advanced Stable Diffusion Workflows
+  # =========================================================================
+  comfyui:
+    image: yanwk/comfyui-boot:rocm
+    container_name: comfyui
+    hostname: comfyui
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    ports:
+      - "8188:8188"
+    environment:
+      - TZ=Europe/Berlin
+      - CLI_ARGS=--listen 0.0.0.0 --port 8188
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0
+      - ROCR_VISIBLE_DEVICES=0
+    volumes:
+      - comfyui_data:/root
+      - comfyui_models:/root/ComfyUI/models
+      - sd_models:/root/ComfyUI/models/checkpoints:ro  # Share SD models
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    deploy:
+      resources:
+        limits:
+          memory: 20G
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.comfyui.rule=Host(`comfy.${DOMAIN}`)"
+      - "traefik.http.routers.comfyui.entrypoints=websecure"
+      - "traefik.http.routers.comfyui.tls.certresolver=cloudflare"
+      - "traefik.http.routers.comfyui.middlewares=authentik@file"
+      - "traefik.http.services.comfyui.loadbalancer.server.port=8188"
+
+  # =========================================================================
+  # JELLYFIN TRANSCODER - 4K Video Hardware Encoding (AMD VCE/VCN)
+  # =========================================================================
+  jellyfin-transcoder:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin-gpu
+    hostname: jellyfin-gpu
+    restart: unless-stopped
+    networks:
+      - homelab_network
+    ports:
+      - "8096:8096"   # HTTP
+      - "8920:8920"   # HTTPS
+    environment:
+      - TZ=Europe/Berlin
+      - JELLYFIN_PublishedServerUrl=https://media.${DOMAIN}
+    volumes:
+      - jellyfin_config:/config
+      - jellyfin_cache:/cache
+      - /mnt/media:/media:ro  # Adjust to your media path
+    devices:
+      - /dev/dri:/dev/dri  # AMD hardware transcoding
+    group_add:
+      - video
+      - render
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin-gpu.rule=Host(`media.${DOMAIN}`)"
+      - "traefik.http.routers.jellyfin-gpu.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin-gpu.tls.certresolver=cloudflare"
+      - "traefik.http.routers.jellyfin-gpu.middlewares=authentik@file"
+      - "traefik.http.services.jellyfin-gpu.loadbalancer.server.port=8096"
+
+volumes:
+  jellyfin_config:
+  jellyfin_cache:
