@@ -1,0 +1,101 @@
+# Homelab OSS Stack & J-Jeco Project Leadership Rules
+
+## Project Context
+- Multi-component homelab: Infrastructure (Docker/Ansible) + AI Platform (J-Jeco)
+- 3-system architecture: VPS (91.107.198.37), ThinkPad (192.168.16.7), RTX1080 (192.168.17.1)
+- Production environment serving real users
+
+## Critical Rules - Prevent Duplicates & Loops
+
+### 1. Documentation Standards
+- **ALWAYS check existing docs before creating new ones**
+- Read AGENTS.md first for repository overview
+- Check infrastructure/README.md for infrastructure details
+- Review ai-platform/ARCHITECTURE.md for AI system context
+- **DO NOT** duplicate information already in these files
+- Cross-reference related docs instead of copying content
+
+### 2. Code & Config Files
+- **NEVER** create duplicate compose files - check infrastructure/docker/stacks/ first
+- **NEVER** duplicate Ansible playbooks - check ansible/playbooks/ first
+- **NEVER** create redundant scripts - check shared/scripts/ first
+- Use existing patterns and extend them, don't recreate
+
+### 3. Loop Prevention
+- **DO NOT** run recursive file operations without explicit path limits
+- **DO NOT** sync secrets in loops - use sync-secrets.sh once
+- **DO NOT** restart services repeatedly - diagnose first, fix once
+- **STOP after 2 failed attempts** - ask for human intervention
+
+### 4. Git Workflow
+- **ALWAYS check git status** before adding files
+- **NEVER commit** .env files, secrets, or API keys
+- **NEVER commit** to remote unless explicitly requested
+- Stage related changes together in logical commits
+
+### 5. Deployment Safety
+- **ALWAYS test on ThinkPad (dev)** before RTX1080 (production)
+- **NEVER deploy to all hosts simultaneously** - deploy sequentially
+- **ALWAYS verify health checks** after each deployment step
+- **CREATE snapshots** before major infrastructure changes
+
+### 6. AI Agent Operations
+- **VERIFY .env exists** before running AI agents
+- **CHECK API key sync status** before multi-system operations
+- **RUN on correct system**: VPS=lightweight, ThinkPad=dev, RTX1080=heavy
+- **AVOID** running same agent command across all systems in loop
+
+### 7. File Organization
+- infrastructure/ = Homelab services (Docker, Ansible)
+- ai-platform/ = J-Jeco multi-agent system
+- shared/ = Cross-system resources (scripts, docs)
+- **DO NOT** mix concerns between these directories
+
+### 8. Monitoring & Debugging
+- Check logs BEFORE restarting services
+- Use docker compose logs -f for real-time debugging
+- Monitor resource usage with docker stats
+- **DO NOT** restart in loop - fix root cause
+
+## Command Patterns to AVOID
+
+```bash
+# ❌ BAD: Recursive loops
+while true; do sync-secrets.sh; done
+for host in *; do deploy-everything; done
+
+# ❌ BAD: Duplicate file creation
+cp infrastructure/README.md infrastructure/README-backup.md
+cp compose.yaml compose.yaml.new
+
+# ❌ BAD: Committing secrets
+git add .env
+git add shared/secrets/
+
+# ✅ GOOD: Intentional, scoped operations
+ansible-playbook -i inventory/hosts.yml playbooks/00-bootstrap.yml
+docker compose -f monitoring.yml up -d
+/home/fitna/homelab/shared/scripts/sync-secrets.sh
+```
+
+## Before Any Major Action
+
+1. Read AGENTS.md for context
+2. Check git status to understand current state
+3. Verify which system you're targeting (VPS/ThinkPad/RTX1080)
+4. Look for existing solutions before creating new ones
+5. Ask clarifying questions if deployment scope is unclear
+
+## CodeRabbit Review Focus
+
+When reviewing with CodeRabbit:
+- Check for duplicate documentation
+- Verify no secrets in commits
+- Validate Docker Compose syntax
+- Ensure Ansible playbook idempotency
+- Confirm proper use of .gitignore patterns
+- Review for potential infinite loops in scripts
+
+---
+
+**Remember:** This is production infrastructure. Measure twice, deploy once.
