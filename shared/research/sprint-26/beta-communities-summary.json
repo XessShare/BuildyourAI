@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "task": "HexaHub MVP Beta Communities Research",
+    "date": "2025-12-28",
+    "total_communities": 100,
+    "total_platforms": 24,
+    "estimated_reach": 23643741
+  },
+  "success_criteria": {
+    "communities_100_plus": true,
+    "engagement_50_plus": true,
+    "relevance_30_plus": true,
+    "csv_valid": true
+  },
+  "statistics": {
+    "average_engagement": 7.6,
+    "average_relevance": 8.0,
+    "high_engagement_count": 91,
+    "high_relevance_count": 72
+  },
+  "platform_distribution": {
+    "Reddit": 20,
+    "Discord": 19,
+    "Dev.to": 10,
+    "Lemmy": 8,
+    "GitHub": 7,
+    "Hacker News": 5,
+    "Twitter": 5,
+    "Mastodon": 4,
+    "Bluesky": 3,
+    "ProductHunt": 2,
+    "LinkedIn": 2,
+    "Newsletter": 2,
+    "Forum": 2,
+    "Betalist": 1,
+    "BetaFamily": 1,
+    "BetaFamilyCom": 1,
+    "Betabound": 1,
+    "Discourse": 1,
+    "Kaggle": 1,
+    "StackOverflow": 1,
+    "BetaTesting": 1,
+    "Substack": 1,
+    "Zulip": 1,
+    "Discussions": 1
+  }
+}
