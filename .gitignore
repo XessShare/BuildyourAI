@@ -81,3 +81,21 @@ wireguard/.donoteditthisfile
 pihole/etc-pihole/pihole.toml
 pihole/etc-pihole/config_backups/
 
+
+# Editor configurations
+.continue/
+.cursor/
+
+# PiHole runtime files (permission issues)
+pihole/etc-pihole/logrotate
+pihole/etc-pihole/pihole-FTL.db*
+pihole/etc-pihole/*.log
+
+# WireGuard keys (security)
+wireguard/**/*.key
+wireguard/**/*.conf
+
+# Large binary files
+*.AppImage
+*.rpm
+*.deb
