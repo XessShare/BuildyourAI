@@ -1,8 +1,8 @@
 # Sprint 26 - Plan
 
 **Duration:** 2025-12-28 to 2026-01-11  
-**Status:** 🟡 In Progress  
-**Goal:** [Define sprint goal]
+**Status:** 🟡 In Progress
+**Goal:** Foundation Setup - HexaHub MVP Backend scaffolding, CI/CD Pipeline, und Content Engine Launch vorbereiten
 
 ---
 
@@ -10,15 +10,18 @@
 
 ```
 Capacity: 80 hours (2 weeks × 40 hours)
-Velocity: TBD (from previous sprint)
-Committed Story Points: 0
+Velocity: 21 SP (estimated baseline)
+Committed Story Points: 21
+Phase: 1 (Foundation - Month 1, Week 1-2)
 ```
 
 ---
 
 ## 🎯 Sprint Goal
 
-[Write 1-2 sentence sprint goal aligned with roadmap]
+**Foundation Setup:** HexaHub MVP Backend scaffolding, CI/CD Pipeline, und Content Engine Launch vorbereiten. Ziel: Staging-Environment ready, erste Agent-Tasks automatisiert, Roadmap-Tracking aktiv.
+
+**Alignment:** ROADMAP_1M_18MONTHS.md Phase 1 - Woche 1-2
 
 ---
 
@@ -26,28 +29,55 @@ Committed Story Points: 0
 
 ### High Priority (Must Complete)
 
-- [ ] **Task 1:** Description
+- [ ] **HexaHub MVP Backend Setup**
+  - Story Points: 8
+  - Owner: Fitna + DeploymentOrchestrator
+  - Tasks:
+    - FastAPI + PostgreSQL Grundgerüst
+    - Basic Auth (Authentik Integration)
+    - API Scaffolding (User, Auth, Health endpoints)
+    - Docker Compose Setup
+  - Dependencies: Infrastructure ready
+
+- [ ] **CI/CD Pipeline Einrichtung**
   - Story Points: 5
-  - Owner: [You/Agent]
+  - Owner: DeploymentOrchestrator
+  - Tasks:
+    - GitHub Actions Workflow
+    - Docker Build Pipeline
+    - Deployment zu RTX1080 (Staging)
+    - Auto-testing Integration
   - Dependencies: None
-  
-- [ ] **Task 2:** Description
-  - Story Points: 3
-  - Owner: [You/Agent]
-  - Dependencies: Task 1
 
 ### Medium Priority (Should Complete)
 
-- [ ] **Task 3:** Description
-  - Story Points: 2
-  - Owner: Agent
-  - Dependencies: None
+- [ ] **Content Engine Kickoff**
+  - Story Points: 3
+  - Owner: ContentCreatorAgent
+  - Tasks:
+    - Landing Page Copy (AI-generiert)
+    - Erstes YouTube Script (AI + Homelab Tutorial)
+    - Newsletter Setup Vorbereitung (Ghost/Listmonk)
+  - Dependencies: Research completed
+
+- [ ] **Monitoring & Observability**
+  - Story Points: 3
+  - Owner: DeploymentOrchestrator
+  - Tasks:
+    - Grafana Dashboard für HexaHub
+    - Prometheus Metrics (API latency, DB connections)
+    - Alert Rules (Downtime, Error rate)
+  - Dependencies: Backend Setup
 
 ### Low Priority (Nice to Have)
 
-- [ ] **Task 4:** Description
-  - Story Points: 1
-  - Owner: Agent
+- [ ] **Repository & Dokumentation**
+  - Story Points: 2
+  - Owner: Fitna
+  - Tasks:
+    - Git Repository strukturieren
+    - ARCHITECTURE.md erstellen
+    - API Dokumentation (Swagger/OpenAPI)
   - Dependencies: None
 
 ---
@@ -56,29 +86,56 @@ Committed Story Points: 0
 
 ```yaml
 ContentCreatorAgent:
-  - [ ] Task: Social media posts (daily)
-  - [ ] Task: Blog article (1x)
-  
+  Priority: HIGH
+  Output: shared/content/sprint-26/
+  - [ ] Landing Page Copy generieren (HexaHub MVP)
+  - [ ] Erstes YouTube Video Script (AI + Homelab Tutorial)
+  - [ ] Social Media Post-Template erstellen (Twitter/LinkedIn)
+  - [ ] Newsletter Setup Vorbereitung (Ghost/Listmonk)
+
 ResearcherAgent:
-  - [ ] Task: Market research report
-  - [ ] Task: Competitor analysis
-  
+  Priority: HIGH
+  Output: shared/research/sprint-26/
+  - [ ] Competitor Analysis (AI Workspace Tools: Cursor, Copilot, etc.)
+  - [ ] Beta User Communities identifizieren (Reddit, HN, Dev.to)
+  - [ ] Trending Topics für Content (Reddit r/selfhosted, r/homelab)
+  - [ ] Market research report (AI SaaS landscape)
+
 AnalystAgent:
-  - [ ] Task: Update roadmap tracker (daily)
-  - [ ] Task: Sprint metrics dashboard
-  
+  Priority: MEDIUM
+  Output: shared/dashboards/
+  - [ ] Roadmap Tracker initialisieren (shared/dashboards/1m-roadmap-tracker.md)
+  - [ ] Sprint Metrics Dashboard setup (Grafana)
+  - [ ] KPI Baseline definieren (MRR=0€, Customers=0, Sprint Velocity=21 SP)
+  - [ ] Daily progress tracking automation
+
 ProjectManagerAgent:
-  - [ ] Task: Sprint planning
-  - [ ] Task: Daily standup summaries
-  
+  Priority: MEDIUM
+  Output: sprints/sprint-26/
+  - [ ] Sprint planning completion (this document)
+  - [ ] Daily Standup Automation einrichten
+  - [ ] Sprint Board aktualisieren (Kanban - SPRINT_BOARD.md)
+  - [ ] Blocker-Tracking System setup
+
 DeploymentOrchestrator:
-  - [ ] Task: CI/CD pipeline updates
-  - [ ] Task: Infrastructure scaling
-  
+  Priority: HIGH
+  Output: infrastructure/ + CI/CD
+  - [ ] CI/CD Pipeline für HexaHub MVP einrichten
+  - [ ] Staging Environment vorbereiten (RTX1080 - Docker Compose)
+  - [ ] Monitoring Setup (Grafana/Prometheus für HexaHub)
+  - [ ] Infrastructure scaling preparation (K3s readiness check)
+
 VerifierAgent:
-  - [ ] Task: Automated testing
-  - [ ] Task: Code reviews
+  Priority: CONTINUOUS
+  Output: Laufend
+  - [ ] Automated Testing für bestehende Services (pytest baseline)
+  - [ ] Code Review Automation (CodeRabbit Integration active)
+  - [ ] QA Checklist für MVP (API testing, Auth flow)
+  - [ ] Security scan (dependency check, vulnerability scanning)
 ```
+
+**Total Agent Tasks:** 24
+**Expected Human Hours Saved:** ~45 hours
 
 ---
 
