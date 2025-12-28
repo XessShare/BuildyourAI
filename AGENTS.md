@@ -1,6 +1,6 @@
 # AGENTS.md - Homelab Repository Guide
 
-**Last Updated:** 2025-12-25  
+**Last Updated:** 2025-12-28  
 **Purpose:** Help AI agents work effectively in this homelab infrastructure repository
 
 ---
@@ -54,17 +54,34 @@ This is a **multi-component homelab infrastructure** combining:
 │
 ├── brainstorm-workflow-automatisierung/  # Workflow automation POCs
 │   ├── poc/prefect/            # Prefect workflow examples
+│   ├── poc/n8n/                # n8n automation examples  
 │   └── docs/                   # Workflow documentation
+│
+├── business-and-moonshot-guide/  # Strategic planning
+│   ├── Business_Structuring_Guide.md
+│   └── Moonshot_Brainstorm.md
 │
 ├── .github/workflows/          # CI/CD automation
 │   └── deploy.yml              # Deployment workflow
 │
 ├── wireguard/                  # VPN configuration
+│   ├── wg_confs/wg0.conf      # Main config
+│   ├── server/                 # Server keys
+│   └── peer1/, peer2/, peer3/  # Client configs
+│
 ├── pihole/                     # Pi-hole DNS/ad-blocking
+│   ├── etc-pihole/            # Pi-hole configuration
+│   └── etc-dnsmasq.d/         # dnsmasq configuration
+│
 ├── prometheus/                 # Monitoring configs
+│   └── prometheus.yml/
+│
 ├── docker-compose.yml          # Root-level compose (minimal)
 ├── SCHLACHTPLAN_2025.md        # Strategic roadmap
-└── SSH_SETUP_GUIDE.md          # SSH key setup instructions
+├── SSH_SETUP_GUIDE.md          # SSH key setup instructions
+├── GAMING_PC_CONFIGURATION.md  # Gaming PC specific config
+├── GAMING_PC_DEPLOYMENT_GUIDE.md
+└── CODERABBIT_DEPLOYMENT_PROMPT.md  # CodeRabbit AI integration guide
 ```
 
 ---
@@ -79,16 +96,17 @@ The infrastructure uses **multiple compose files** organized by function:
 # Stack locations
 /home/fitna/homelab/infrastructure/docker/stacks/
 
-# Core infrastructure
+# Available stacks (ls output):
+automation.yml        # Pi-hole, n8n, Ollama
 core-hostA.yml        # Traefik, Authentik, Portainer (ThinkPad)
 core-hostB.yml        # PostgreSQL, Redis (RTX1080)
+core-phase1.yml       # Phased deployment approach
 core.yml              # Combined core services
-
-# Application stacks
+gaming-pc-ai.yml      # Gaming PC specific AI workloads
 homeassistant.yml     # Smart home (HA, MQTT, Zigbee2MQTT, Node-RED)
 media.yml             # Jellyfin, Sonarr, Radarr, qBittorrent
 monitoring.yml        # Prometheus, Grafana, Loki, Uptime Kuma
-automation.yml        # Pi-hole, n8n, Ollama
+scripts/              # Helper scripts for stack management
 ```
 
 ### Essential Docker Commands
@@ -201,12 +219,69 @@ source ../ai-agents-masterclass/bin/activate
 # Install/update dependencies
 pip install -r requirements.txt
 
-# Main dependencies
+# Main dependencies (from requirements.txt):
+# LLM & AI Frameworks:
 # - openai>=1.0.0
 # - anthropic>=0.18.0
 # - google-generativeai>=0.3.0
 # - langchain>=0.1.0
+# - langchain-openai>=0.0.5
+# - langchain-anthropic>=0.1.0
+# - langchain-google-genai>=1.0.0
+#
+# Data & Async:
+# - numpy>=1.24.0
+# - pandas>=2.0.0
+# - asyncio>=3.4.3
+#
+# Environment & API:
 # - python-dotenv>=1.0.0
+# - requests>=2.31.0
+# - httpx>=0.25.0
+#
+# Utilities:
+# - pydantic>=2.0.0
+# - tenacity>=8.2.0
+#
+# Vector Database:
+# - chromadb>=0.4.0
+# - sentence-transformers>=2.0.0
+#
+# Optional:
+# - watchdog>=3.0.0  # File monitoring
+# - cairosvg>=2.7.0  # SVG to PNG conversion
+```
+
+### Testing AI Agents
+
+```bash
+# Test all configured LLMs and API connectivity
+cd /home/fitna/homelab/ai-platform/1-first-agent
+python test_all_models.py
+
+# Test individual agents
+python test_analyst.py           # Test Analyst agent
+python test_content_creator.py   # Test Content Creator agent
+python test_researcher.py        # Test Researcher agent
+python test_verifier.py          # Test Verifier agent
+
+# Test specific functionality
+python test_knowledge_base.py    # Test knowledge base integration
+python test_visualization.py     # Test visualization generation
+python test_deployment.py        # Test deployment orchestration (mock)
+python test_deployment_mock.py   # Test deployment mock scenarios
+python test_resource_management.py  # Test resource management (uses pytest)
+
+# Test utilities
+python test_telegram_notifier.py # Test Telegram notifications
+python test_avatar_video.py      # Test avatar video generation
+
+# Interactive model testing
+python chat_with_model.py        # Chat interface for testing models
+
+# Note: Some tests use pytest (test_resource_management.py), most use asyncio
+# Run pytest tests with:
+# python -m pytest test_resource_management.py -v
 ```
 
 ### Running AI Agents
@@ -215,10 +290,28 @@ pip install -r requirements.txt
 # From ai-platform/1-first-agent directory
 python main.py <command>
 
-# Available commands (inferred from codebase):
-# - moonshot-check: Verify API connectivity
-# - plan-project: Create project plans
-# (Check main.py or config.py for full command list)
+# Available commands:
+python main.py                              # Start interactive mode
+python main.py optimize-prompt "..."        # Optimize a prompt for clarity
+python main.py plan-project "..."           # Create action plan for a project
+python main.py simplify "..."               # Simplify technical text for non-tech audience
+python main.py moonshot-check               # Check progress towards moonshot goal
+python main.py interactive                  # Explicitly start interactive mode
+
+# Examples:
+python main.py optimize-prompt "mach mal content"
+python main.py plan-project "Erstes Tutorial-Video erstellen"
+python main.py moonshot-check
+python main.py simplify "Kubernetes verwendet einen deklarativen Ansatz..."
+
+# Interactive mode commands:
+# Once in interactive mode (no args), use:
+# - optimize   : Prompt optimieren
+# - plan       : Projekt planen
+# - simplify   : Tech-Content vereinfachen
+# - moonshot   : Progress checken
+# - help       : Show help
+# - quit/exit  : Exit interactive mode
 ```
 
 ### API Key Management
@@ -229,13 +322,29 @@ python main.py <command>
 # Sync API keys across all 3 systems
 /home/fitna/homelab/shared/scripts/sync-secrets.sh
 
-# Creates/syncs these files:
-# - Master: ~/J-Jeco/.env.master (source of truth)
-# - Distributed to: VPS, ThinkPad, RTX1080
+# Master secrets location (default)
+# ~/J-Jeco/.env.master or /home/fitna/homelab/shared/secrets/.env.master
+
+# Systems defined in sync script:
+# - vps: jonas-homelab-vps
+# - rtx1080: 192.168.17.1  
+# - thinkpad: pve-thinkpad
 
 # Required API keys:
+# Infrastructure (Homelab OSS Stack):
+# - CLOUDFLARE_EMAIL
+# - CLOUDFLARE_API_KEY
+# - AUTHENTIK_SECRET_KEY
+# - AUTHENTIK_POSTGRESQL_PASSWORD
+# - POSTGRES_PASSWORD
+# - PIHOLE_PASSWORD
+# - GRAFANA_ADMIN_PASSWORD
+
+# AI Platform (J-Jeco):
 # - OPENAI_API_KEY
 # - ANTHROPIC_API_KEY
+# - GOOGLE_API_KEY
+# - PERPLEXITY_API_KEY
 # - TELEGRAM_BOT_TOKEN (optional)
 # - HEYGEN_API_KEY (optional)
 ```
@@ -689,20 +798,298 @@ Check `git status` to see any uncommitted changes, modified files, and untracked
 
 ---
 
+## 📂 Additional Project Components
+
+### Workflow Automation (Brainstorm)
+
+```bash
+# Location
+/home/fitna/homelab/brainstorm-workflow-automatisierung/
+
+# Contains proof-of-concepts for:
+# - Prefect workflows
+# - n8n automation
+# - GitHub to GitLab synchronization
+
+# Example Prefect flow
+cd /home/fitna/homelab/brainstorm-workflow-automatisierung/poc/prefect
+# (Check for requirements.txt and setup instructions)
+```
+
+### WireGuard VPN Configuration
+
+```bash
+# Location
+/home/fitna/homelab/wireguard/
+
+# Configuration files:
+wireguard/wg_confs/wg0.conf       # Main WireGuard config
+wireguard/server/                  # Server keys
+wireguard/peer1/, peer2/, peer3/  # Client configurations
+
+# Each peer directory contains:
+# - peer.conf       # Client-specific config
+# - peer.png        # QR code for mobile setup
+# - presharedkey    # Pre-shared key for additional security
+# - privatekey      # Client private key
+# - publickey       # Client public key (peer1 only shows this)
+
+# CoreDNS configuration
+wireguard/coredns/Corefile         # DNS configuration for VPN
+```
+
+### Business Strategy Documents
+
+```bash
+# Location
+/home/fitna/homelab/business-and-moonshot-guide/
+
+# Strategic planning documents:
+Business_Structuring_Guide.md    # Business structure and planning
+Moonshot_Brainstorm.md           # Long-term vision and goals
+```
+
+### Gaming PC Configuration
+
+```bash
+# Gaming-specific deployment configurations
+/home/fitna/homelab/GAMING_PC_CONFIGURATION.md
+/home/fitna/homelab/GAMING_PC_DEPLOYMENT_GUIDE.md
+
+# AI workloads for gaming PC
+/home/fitna/homelab/infrastructure/docker/stacks/gaming-pc-ai.yml
+```
+
+---
+
 ## 🏁 Getting Started Checklist
 
 For agents beginning work in this repository:
 
 1. [ ] Read this AGENTS.md completely
 2. [ ] Read infrastructure/README.md for full context
-3. [ ] Check git status and understand current changes
-4. [ ] Verify you can access both Proxmox hosts (192.168.16.7, 192.168.17.1)
-5. [ ] Understand the 3-system architecture (VPS, ThinkPad, RTX1080)
-6. [ ] Know which compose stack you'll be working with
-7. [ ] Check if .env file exists and is properly configured
-8. [ ] Understand the deployment workflow before making changes
-9. [ ] Review recent commit history for context
-10. [ ] Ask clarifying questions if deployment targets are ambiguous
+3. [ ] Review HOMELAB_SCHLACHTPLAN.md and MIGRATION-PLAN.md in /home/fitna for strategic context
+4. [ ] Check git status and understand current changes
+5. [ ] Verify you can access both Proxmox hosts (192.168.16.7, 192.168.17.1)
+6. [ ] Understand the 3-system architecture (VPS, ThinkPad, RTX1080)
+7. [ ] Know which compose stack you'll be working with
+8. [ ] Check if .env file exists and is properly configured
+9. [ ] Understand the deployment workflow before making changes
+10. [ ] Review recent commit history for context
+11. [ ] Ask clarifying questions if deployment targets are ambiguous
+
+---
+
+## 📋 Additional Context Files
+
+### Parent Directory Documentation
+
+```bash
+# Strategic planning (in /home/fitna/)
+/home/fitna/HOMELAB_SCHLACHTPLAN.md  # Master infrastructure plan
+/home/fitna/MIGRATION-PLAN.md        # Consolidation and migration strategy
+
+# System diagnostic script
+/home/fitna/diagnose_toshiba.sh      # Toshiba drive diagnostics
+
+# Key points from these files:
+# - 3-system architecture: VPS (external), ThinkPad (192.168.16.7), RTX1080 (192.168.17.1)
+# - Proxmox VE as virtualization layer
+# - Docker-based service deployment
+# - J-Jeco AI platform integration with homelab infrastructure
+# - Unified secret management across systems
+```
+
+---
+
+## 📊 Daily Progress Tracking System
+
+### Overview
+
+This repository uses a comprehensive daily tracking system for monitoring progress across all projects (Agents, J-Jeco, Homelab).
+
+### Daily Workflow Scripts
+
+**Location:** `/home/fitna/homelab/shared/scripts/`
+
+#### Create Daily Work Sheet (Enhanced Multi-Project)
+```bash
+# Create today's work sheet with project-specific tracking
+/home/fitna/homelab/shared/scripts/create-daily-sheet-enhanced.sh
+
+# Output: /home/fitna/homelab/DD.MM.YY/DAILY_WORK_SHEET.md
+```
+
+**Features:**
+- ✅ Multi-project progress tracking (Agents, J-Jeco, Homelab)
+- ✅ Project-specific task lists
+- ✅ Time tracking per session (Morning/Afternoon/Evening)
+- ✅ Cross-project integration tasks
+- ✅ Visual progress bars (each █ = 5%)
+- ✅ Blocker tracking with resolution history
+- ✅ End-of-day summary with metrics
+
+#### Generate Evening Report
+```bash
+# Analyze today's work and generate comprehensive report
+/home/fitna/homelab/shared/scripts/create-evening-report.sh
+
+# Output: /home/fitna/homelab/DD.MM.YY/EVENING_REPORT.md
+```
+
+**Features:**
+- 📊 Automated task completion statistics
+- 📈 Project-specific progress breakdown (Agents, J-Jeco, Homelab)
+- 🎯 Performance analysis with recommendations
+- 🔮 Tomorrow's preparation checklist
+- 📎 Historical context and trends
+
+### Daily Routine
+
+#### Morning (Start of Day)
+```bash
+# 1. Create new daily sheet
+/home/fitna/homelab/shared/scripts/create-daily-sheet-enhanced.sh
+
+# 2. Review previous day's evening report
+cat /home/fitna/homelab/$(date -d "yesterday" +%d.%m.%y)/EVENING_REPORT.md
+
+# 3. Edit today's work sheet
+nano /home/fitna/homelab/$(date +%d.%m.%y)/DAILY_WORK_SHEET.md
+
+# 4. Set top 3 priorities
+# 5. Update progress baselines
+```
+
+#### Throughout Day
+- ✅ Check boxes `[ ]` → `[x]` as tasks complete
+- ✅ Update progress bars periodically
+- ✅ Document blockers immediately
+- ✅ Move completed tasks to "Completed Tasks" section
+- ✅ Track time per session
+
+#### Evening (End of Day)
+```bash
+# 1. Complete all sections in DAILY_WORK_SHEET.md
+# 2. Fill out "End of Day Summary"
+# 3. Generate evening report
+/home/fitna/homelab/shared/scripts/create-evening-report.sh
+
+# 4. Review report
+cat /home/fitna/homelab/$(date +%d.%m.%y)/EVENING_REPORT.md
+
+# 5. Plan tomorrow's top 3 priorities
+```
+
+### Project-Specific Tracking
+
+The enhanced daily sheets track progress separately for:
+
+#### 🤖 AI Agents Project
+- **Location:** `/home/fitna/J-Jeco/`
+- **Focus:** Agent development, AGENTS.md updates, testing
+- **Tasks:** Agent functionality, configurations, documentation
+
+#### 🚀 J-Jeco Platform
+- **Location:** `/home/fitna/homelab/ai-platform/1-first-agent/`
+- **Focus:** LLM integration, workflows, knowledge base
+- **Tasks:** Agent workflows, API integrations, ChromaDB management
+
+#### 🏗️ Homelab Infrastructure
+- **Location:** `/home/fitna/homelab/infrastructure/`
+- **Focus:** Service deployment, health monitoring, integration
+- **Tasks:** Docker stacks, Ansible playbooks, system maintenance
+
+### Progress Visualization
+
+**Progress Bar Syntax:**
+```
+Empty:    [░░░░░░░░░░░░░░░░░░░░] 0%
+25%:      [█████░░░░░░░░░░░░░░░] 25%
+50%:      [██████████░░░░░░░░░░] 50%
+75%:      [███████████████░░░░░] 75%
+Complete: [████████████████████] 100%
+```
+
+Each █ represents 5% progress (20 blocks total).
+
+### Status Icons
+
+**Task Status:**
+- ⚪ Not Started
+- 🟡 In Progress
+- 🟢 Completed
+- 🔴 Blocked
+- 🔵 Waiting
+- 🟣 On Hold
+
+**Priority Levels:**
+- 🔥 Critical
+- ⚡ High
+- ⭐ Medium
+- 📌 Low
+- 💡 Optional
+
+**Project Categories:**
+- 🤖 AI Agents
+- 🚀 J-Jeco Platform
+- 🏗️ Homelab Infrastructure
+- 📚 Documentation
+- 🔐 Security
+- 🧪 Testing
+
+### Evening Report Analysis
+
+The evening report automatically:
+1. **Counts tasks** (total, completed, pending)
+2. **Calculates completion percentage**
+3. **Filters by project** (agents, J-Jeco, homelab keywords)
+4. **Extracts blockers** from work sheet
+5. **Summarizes learnings** and notes
+6. **Generates performance score** with recommendations
+7. **Prepares tomorrow's focus** items
+
+**Performance Ratings:**
+- 🟢 **Excellent** (80-100%): Maintain workflow
+- 🟡 **Good** (60-79%): Keep momentum
+- 🟠 **Moderate** (40-59%): Review priorities
+- 🔴 **Needs Improvement** (<40%): Address blockers
+
+### Quick Access Commands
+
+```bash
+# View today's work sheet
+cat /home/fitna/homelab/$(date +%d.%m.%y)/DAILY_WORK_SHEET.md
+
+# Edit today's work sheet
+nano /home/fitna/homelab/$(date +%d.%m.%y)/DAILY_WORK_SHEET.md
+
+# View today's evening report
+cat /home/fitna/homelab/$(date +%d.%m.%y)/EVENING_REPORT.md
+
+# View yesterday's evening report
+cat /home/fitna/homelab/$(date -d "yesterday" +%d.%m.%y)/EVENING_REPORT.md
+
+# List all daily directories
+ls -ld /home/fitna/homelab/[0-9][0-9].*
+```
+
+### Integration with Git
+
+The daily sheets and reports are **not committed to Git** (they're in `.gitignore`), but they serve as:
+- 📊 **Local progress tracking** for personal productivity
+- 🔍 **Debugging reference** when issues arise
+- 📈 **Historical analysis** of work patterns
+- 📝 **Documentation source** for commit messages
+
+**Best Practice:**  
+Use evening reports to write meaningful commit messages capturing the day's work.
+
+### Related Documentation
+
+- **Progress Tracking Guide:** `/home/fitna/homelab/shared/docs/PROGRESS_TRACKING_GUIDE.md`
+- **Strategic Plan:** `/home/fitna/homelab/SCHLACHTPLAN_V2.md`
+- **Project Status:** Various `PROJECT_STATUS.md` files in project directories
 
 ---
 
