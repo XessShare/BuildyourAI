@@ -2,6 +2,9 @@
 
 Self-hosted AI workspace backend built with FastAPI and PostgreSQL.
 
+[![CI/CD Pipeline](https://github.com/XessShare/BuildyourAI/actions/workflows/backend-ci-cd.yml/badge.svg)](https://github.com/XessShare/BuildyourAI/actions/workflows/backend-ci-cd.yml)
+[![codecov](https://codecov.io/gh/XessShare/BuildyourAI/branch/main/graph/badge.svg)](https://codecov.io/gh/XessShare/BuildyourAI)
+
 ## Quick Start
 
 ### Prerequisites
@@ -154,10 +157,42 @@ alembic upgrade head
 
 MIT License - See LICENSE file
 
+## CI/CD Pipeline
+
+**Status:** ✅ Configured
+**Workflow:** `.github/workflows/backend-ci-cd.yml`
+**Staging:** http://rtx1080.local:8000
+
+### Automatic Deployment
+
+Pushes to `main`, `master`, or `sprint-26/*` branches automatically:
+1. Build Docker image
+2. Run tests (pytest)
+3. Security scan (Trivy)
+4. Deploy to staging
+5. Run health checks
+
+### Manual Deployment
+
+```bash
+# Deploy to staging
+./scripts/deploy.sh staging
+
+# Run health checks
+./scripts/health-check.sh staging
+
+# Rollback if needed
+./scripts/rollback.sh
+```
+
+See [CICD_SETUP.md](./CICD_SETUP.md) for detailed pipeline documentation.
+
+---
+
 ## Sprint 26 Notes
 
-**Status:** MVP Backend Setup (8 SP)
-**Goal:** Basic API with health, auth, user endpoints
-**Tech Stack:** FastAPI 0.109, PostgreSQL 15, SQLAlchemy 2.0
-**Authentication:** Authentik OAuth (placeholder implemented)
-**Target:** Staging deployment to RTX1080 by Day 7
+**Status:** MVP Backend + CI/CD Complete (13 SP)
+**Goal:** Automated deployment pipeline with testing
+**Tech Stack:** FastAPI 0.109, PostgreSQL 15, Docker, GitHub Actions
+**Authentication:** JWT (demo mode), Authentik OAuth (placeholder)
+**Deployment:** Automated to RTX1080 staging ✓
