@@ -1,0 +1,337 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - sprint-26/**
+    paths:
+      - 'hexahub-backend/**'
+      - '.github/workflows/backend-ci-cd.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'hexahub-backend/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/hexahub-backend
+  STAGING_HOST: rtx1080.local
+  STAGING_USER: fitna
+
+jobs:
+  # Job 1: Build and Test
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./hexahub-backend
+          file: ./hexahub-backend/Dockerfile
+          push: false
+          load: true
+          tags: hexahub-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run tests in Docker
+        working-directory: ./hexahub-backend
+        run: |
+          # Start PostgreSQL for tests
+          docker compose up -d postgres
+
+          # Wait for PostgreSQL to be ready
+          timeout 30 bash -c 'until docker compose exec postgres pg_isready -U hexahub; do sleep 1; done'
+
+          # Run tests
+          docker run --rm \
+            --network hexahub-backend_hexahub-network \
+            -e DATABASE_URL="postgresql://hexahub:hexahub_password@postgres:5432/hexahub" \
+            hexahub-backend:test \
+            pytest tests/ -v --cov=app --cov-report=term --cov-report=xml
+
+          # Cleanup
+          docker compose down
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./hexahub-backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+
+      - name: Build and push Docker image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./hexahub-backend
+          file: ./hexahub-backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image tags
+        run: echo "Built and pushed image with tags - ${{ steps.meta.outputs.tags }}"
+
+  # Job 2: Security Scan
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 3: Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' ||
+       github.ref == 'refs/heads/master' ||
+       startsWith(github.ref, 'refs/heads/sprint-26/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: http://rtx1080.local:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create backup of current deployment
+        run: |
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            if [ -d ~/hexahub-backend ]; then
+              BACKUP_DIR=~/hexahub-backup-$(date +%Y%m%d-%H%M%S)
+              echo "Creating backup at $BACKUP_DIR"
+              cp -r ~/hexahub-backend $BACKUP_DIR
+              # Keep only last 5 backups
+              ls -dt ~/hexahub-backup-* | tail -n +6 | xargs rm -rf
+            fi
+          EOF
+
+      - name: Deploy to staging server
+        run: |
+          # Copy files to staging server
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude 'venv' \
+            --exclude '__pycache__' \
+            --exclude '*.pyc' \
+            --exclude 'test.db' \
+            ./hexahub-backend/ \
+            ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }}:~/hexahub-backend/
+
+      - name: Deploy with Docker Compose
+        run: |
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            cd ~/hexahub-backend
+
+            # Create .env if not exists
+            if [ ! -f .env ]; then
+              cp .env.example .env
+              echo "SECRET_KEY=$(openssl rand -hex 32)" >> .env
+            fi
+
+            # Pull latest images
+            docker compose pull
+
+            # Start services with health check
+            docker compose up -d --remove-orphans
+
+            # Wait for services to be healthy
+            echo "Waiting for services to be healthy..."
+            timeout 60 bash -c 'until docker compose exec postgres pg_isready -U hexahub; do sleep 2; done'
+
+            # Health check
+            sleep 5
+            HEALTH_STATUS=$(curl -s http://localhost:8000/health | grep -o '"status":"healthy"' || echo "")
+
+            if [ -z "$HEALTH_STATUS" ]; then
+              echo "Health check failed! Rolling back..."
+              docker compose down
+              exit 1
+            fi
+
+            echo "Deployment successful! Backend is healthy."
+            docker compose ps
+          EOF
+
+      - name: Run post-deployment tests
+        run: |
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            # Test health endpoints
+            curl -f http://localhost:8000/health || exit 1
+            curl -f http://localhost:8000/health/db || exit 1
+
+            # Test authentication
+            RESPONSE=$(curl -s -X POST http://localhost:8000/auth/login \
+              -d "username=cicd-test&password=test")
+
+            if echo "$RESPONSE" | grep -q "access_token"; then
+              echo "Authentication test passed"
+            else
+              echo "Authentication test failed"
+              exit 1
+            fi
+          EOF
+
+      - name: Cleanup old Docker images
+        run: |
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            docker image prune -af --filter "until=72h"
+          EOF
+
+      - name: Send deployment notification
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          COLOR="good"
+          if [ "$STATUS" != "success" ]; then
+            COLOR="danger"
+          fi
+
+          echo "Deployment to staging: $STATUS"
+          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+
+  # Job 4: Rollback (Manual trigger only)
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'rollback'
+    environment:
+      name: staging
+
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Rollback to previous backup
+        run: |
+          ssh ${{ env.STAGING_USER }}@${{ env.STAGING_HOST }} << 'EOF'
+            # Find most recent backup
+            LATEST_BACKUP=$(ls -dt ~/hexahub-backup-* 2>/dev/null | head -1)
+
+            if [ -z "$LATEST_BACKUP" ]; then
+              echo "No backup found to rollback to!"
+              exit 1
+            fi
+
+            echo "Rolling back to: $LATEST_BACKUP"
+
+            # Stop current deployment
+            cd ~/hexahub-backend
+            docker compose down
+
+            # Restore backup
+            rm -rf ~/hexahub-backend
+            cp -r "$LATEST_BACKUP" ~/hexahub-backend
+
+            # Start services
+            cd ~/hexahub-backend
+            docker compose up -d
+
+            # Health check
+            sleep 5
+            curl -f http://localhost:8000/health || exit 1
+
+            echo "Rollback successful!"
+          EOF
+
+  # Job 5: Deploy to Production (manual approval required)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://api.hexahub.com
+
+    steps:
+      - name: Placeholder for production deployment
+        run: |
+          echo "Production deployment workflow"
+          echo "This would deploy to production K3s cluster"
+          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          # TODO: Implement K3s deployment with kubectl

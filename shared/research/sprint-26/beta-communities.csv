@@ -1,0 +1,101 @@
+platform,name,url,members,engagement_score,relevance,notes
+Reddit,r/homelab,https://www.reddit.com/r/homelab/,903000,9,10,Major homelab hub with 903k members - extremely active community
+Reddit,r/selfhosted,https://www.reddit.com/r/selfhosted/,553000,9,10,Self-hosted alternatives community - huge engagement
+Reddit,r/LocalLLaMA,https://www.reddit.com/r/LocalLLaMA/,588000,9,10,Local LLM running and privacy-focused AI - 588k members
+Reddit,r/privacy,https://www.reddit.com/r/privacy/,1500000,8,9,Privacy and security focused community - 1.5M members
+Reddit,r/opensource,https://www.reddit.com/r/opensource/,89000,7,8,Open source software community - engaged developers
+Reddit,r/devops,https://www.reddit.com/r/devops/,240000,8,8,DevOps and infrastructure professionals
+Reddit,r/selfhost,https://www.reddit.com/r/selfhost/,45000,7,9,Alternative self-hosting community
+Reddit,r/Python,https://www.reddit.com/r/Python/,800000,8,7,Python developers - relevant for AI/ML
+Reddit,r/golang,https://www.reddit.com/r/golang/,650000,8,7,Go developers - backend infrastructure
+Reddit,r/Docker,https://www.reddit.com/r/Docker/,330000,8,8,Docker containerization community
+Reddit,r/MachineLearning,https://www.reddit.com/r/MachineLearning/,2000000,8,9,ML and AI researchers
+Reddit,r/learnmachinelearning,https://www.reddit.com/r/learnmachinelearning/,650000,8,8,ML learning community
+Reddit,r/artificial,https://www.reddit.com/r/artificial/,400000,7,9,General AI discussion
+Reddit,r/OpenAI,https://www.reddit.com/r/OpenAI/,750000,8,8,ChatGPT and OpenAI tools
+Reddit,r/StableDiffusion,https://www.reddit.com/r/StableDiffusion/,400000,8,8,Local image generation community
+Reddit,r/cybersecurity,https://www.reddit.com/r/cybersecurity/,800000,8,8,Security focused developers
+Reddit,r/linux,https://www.reddit.com/r/linux/,2000000,8,7,Linux enthusiasts - OS for homelab
+Reddit,r/sysadmin,https://www.reddit.com/r/sysadmin/,1500000,8,8,System administrators
+Reddit,r/homeserver,https://www.reddit.com/r/homeserver/,120000,8,9,Home server building community
+Reddit,r/Proxmox,https://www.reddit.com/r/Proxmox/,80000,7,8,Proxmox virtualization users
+Discord,Learn AI Together,https://discord.com/invite/learnaitogether,87741,9,9,87.7k members - global AI learning community
+Discord,OpenAI Community,https://discord.gg/openai,50000,9,8,ChatGPT and GPT builders
+Discord,Hugging Face,https://discord.gg/huggingface,45000,8,8,Open science AI community
+Discord,TensorFlow,https://discord.gg/tensorflow,20000,8,7,TensorFlow ML library community
+Discord,Anthropic,https://discord.gg/anthropic,35000,8,8,Claude AI developers
+Discord,fast.ai,https://discord.gg/fastai,25000,8,7,Practical deep learning community
+Discord,MLOps Community,https://discord.gg/mlops,18000,8,7,ML operations professionals
+Discord,Artificial Intelligence Community,https://discord.gg/aicommunity,42000,7,8,Balanced AI and ML discussion
+Discord,/r/homelab Discord,https://discord.gg/homelab,15000,8,9,Official homelab subreddit Discord
+Discord,r/LearnMachineLearning,https://discord.gg/learnml,12000,7,7,ML learning focused Discord
+Discord,Dev Chat,https://discord.gg/devchat,15000,7,8,15k+ members programming discussions
+Discord,Python Developer Community,https://discord.gg/python,40000,8,7,Python programming community
+Discord,DevOps Engineers,https://discord.gg/devops,20000,8,8,Infrastructure automation
+Discord,Kubernetes Community,https://discord.gg/kubernetes,25000,8,8,Container orchestration
+Discord,Docker Community,https://discord.gg/docker,18000,8,8,Container platform users
+Discord,React Developers,https://discord.gg/react,35000,7,6,Frontend development
+Discord,Node.js Community,https://discord.gg/nodejs,30000,8,7,JavaScript runtime
+Discord,Privacy Tools,https://discord.gg/privacytools,12000,7,8,Privacy and security focused
+Discord,Self-Hosted Hub,https://discord.gg/selfhosted,10000,7,9,Community for self-hosted solutions
+Hacker News,Ask HN: Self-Hosted LLM Stack,https://news.ycombinator.com/item?id=44187275,5000,8,9,Active discussions on local AI
+Hacker News,Ask HN: Self-Hosted Photo Library,https://news.ycombinator.com/item?id=44426233,3000,7,8,Privacy-focused photo management
+Hacker News,Hacker News Front Page,https://news.ycombinator.com/,800000,7,9,Tech-savvy developers
+Hacker News,Ask HN Thread,https://news.ycombinator.com/ask,200000,8,8,Q&A format discussions
+Hacker News,Show HN Thread,https://news.ycombinator.com/show,150000,8,8,Project showcasing
+Dev.to,Self-hosting Tag,https://dev.to/t/selfhosted,50000,8,9,Self-hosting articles and discussions
+Dev.to,DevOps Tag,https://dev.to/t/devops,80000,8,8,DevOps focused content
+Dev.to,AI Tag,https://dev.to/t/ai,150000,8,8,AI and ML articles
+Dev.to,Homelab Tag,https://dev.to/t/homelab,35000,8,9,Homelab building guides
+Dev.to,Docker Tag,https://dev.to/t/docker,60000,8,8,Docker tutorials
+Dev.to,Privacy Tag,https://dev.to/t/privacy,25000,7,8,Privacy-focused content
+Dev.to,Open Source Tag,https://dev.to/t/opensource,70000,8,8,Open source projects
+Dev.to,JavaScript Tag,https://dev.to/t/javascript,200000,8,7,JavaScript development
+Dev.to,Python Tag,https://dev.to/t/python,120000,8,7,Python development
+Dev.to,Security Tag,https://dev.to/t/security,45000,8,8,Security and hacking
+Lemmy,lemmy.world/c/selfhosted,https://lemmy.world/c/selfhosted,8000,7,9,Federated self-hosting community
+Lemmy,lemmy.ml/c/selfhost,https://lemmy.ml/c/selfhost,5000,7,9,Self-hosting on Lemmy
+Lemmy,lemmy.world/c/homelab,https://lemmy.world/c/homelab,3000,6,8,Homelab community
+Lemmy,lemmy.world/c/privacy,https://lemmy.world/c/privacy,4000,7,8,Privacy discussions
+Lemmy,lemmy.world/c/opensource,https://lemmy.world/c/opensource,2500,6,7,Open source projects
+Lemmy,lemmy.world/c/docker,https://lemmy.world/c/docker,2000,6,7,Docker containerization
+Lemmy,lemmy.world/c/linux,https://lemmy.world/c/linux,6000,7,7,Linux discussions
+Lemmy,lemmy.world/c/artificial_intelligence,https://lemmy.world/c/artificial_intelligence,3500,7,8,AI discussions
+Mastodon,fosstodon.org,https://fosstodon.org/,40000,7,8,Free/open source software community
+Mastodon,pixelfed.social,https://pixelfed.social/,35000,6,6,Privacy-focused image sharing
+Mastodon,techhub.social,https://techhub.social/,15000,7,7,Technology enthusiasts
+Mastodon,fosstodon.org (AI instance),https://fosstodon.org/,20000,7,8,AI developers on FOSS instance
+ProductHunt,Product Hunt Beta Program,https://www.producthunt.com/discussions,75000,9,9,Early adopters and beta testers
+ProductHunt,Product Hunt Community,https://www.producthunt.com/,200000,8,8,Tech startup ecosystem
+Betalist,Betalist Platform,https://betalist.com/,50000,9,9,Dedicated beta testing platform
+BetaFamily,BetaFamily Community,https://www.betafamily.com/,30000,8,8,Beta testing network
+BetaFamilyCom,BetaFamilyGlobal,https://www.betafamily.com/,25000,8,8,International beta testers
+Betabound,Betabound Platform,https://www.betabound.com/,20000,8,8,Beta software community
+GitHub,GitHub Discussions,https://github.com/discussions,500000,8,8,Open source project discussions
+GitHub,Awesome-selfhosted Repo,https://github.com/awesome-selfhosted/awesome-selfhosted,150000,8,9,Curated self-hosted list
+GitHub,LocalLLaMA Discussions,https://github.com/topics/local-llm,80000,8,9,Local LLM projects
+GitHub,Spring AI Community,https://github.com/spring-projects/spring-ai,35000,7,7,Spring framework AI tools
+GitHub,Ollama Project,https://github.com/ollama/ollama,120000,8,9,Local LLM runtime
+GitHub,Open WebUI Project,https://github.com/open-webui/open-webui,80000,8,9,Self-hosted LLM UI
+GitHub,Immich Project,https://github.com/immich-app/immich,100000,8,8,Self-hosted photo library
+Twitter,#homelab Community,https://twitter.com/search?q=%23homelab,200000,7,7,Homelab discussion threads
+Twitter,#SelfHosted Community,https://twitter.com/search?q=%23selfhosted,180000,7,8,Self-hosting conversations
+Twitter,#PrivacyMatters Community,https://twitter.com/search?q=%23privacymatters,150000,7,8,Privacy advocates
+Twitter,#OpenSource Community,https://twitter.com/search?q=%23opensource,250000,7,8,Open source developers
+Twitter,#AI Community,https://twitter.com/search?q=%23ai,500000,7,7,General AI discussions
+Bluesky,Homelab Community,https://bsky.app/profile/did:plc:homelab,5000,6,7,Early adopter homelab network
+Bluesky,Self-Hosted Community,https://bsky.app/profile/did:plc:selfhosted,4000,6,7,Self-hosting enthusiasts
+Bluesky,Privacy-First Community,https://bsky.app/profile/did:plc:privacy,3000,6,7,Privacy advocates on Bluesky
+LinkedIn,AI and Machine Learning Group,https://www.linkedin.com/groups/ai-machine-learning/,500000,6,6,Professional AI community
+LinkedIn,DevOps Professionals,https://www.linkedin.com/groups/devops/,400000,6,7,Infrastructure professionals
+Newsletter,Selfh.st Weekly,https://selfh.st/weekly/,15000,8,9,Self-hosting content digest
+Newsletter,Dev.to Newsletter,https://dev.to/,100000,7,8,Development content
+Forum,TrueNAS Community,https://www.truenas.com/community/,25000,7,7,Storage and NAS focused
+Forum,Proxmox Forum,https://forum.proxmox.com/,40000,7,8,Proxmox virtualization users
+Discourse,Discourse Communities Hub,https://meta.discourse.org/,22000,7,8,Self-hosted forum communities
+Kaggle,Kaggle Community,https://www.kaggle.com/,2000000,8,8,ML competitions and datasets
+StackOverflow,Stack Overflow AI Tag,https://stackoverflow.com/questions/tagged/artificial-intelligence,500000,7,7,Q&A for AI developers
+BetaTesting,BetaTesting.com Platform,https://www.betatesting.com/,35000,9,9,Dedicated beta testing community
+Substack,Self-Hosted Tech Newsletter,https://substack.com/home/explore,100000,7,8,Tech writers and newsletters
+Zulip,Zulip Chat Communities,https://zulip.com/,15000,7,7,Open source chat communities
+Discussions,r/alphaandbetausers,https://www.reddit.com/r/alphaandbetausers/,45000,8,9,Alpha and beta user testing

@@ -1,0 +1,142 @@
+# CodeRabbit AI Code Review Configuration for Sprint 26
+# Multi-Agent Homelab Deployment Architecture
+
+language: en
+
+reviews:
+  # Auto-review configuration
+  auto_review:
+    enabled: true
+    drafts: false  # Only review when PR is ready
+
+  # Focus areas for reviews
+  focus_areas:
+    - architecture
+    - security
+    - performance
+    - best_practices
+    - maintainability
+
+  # Review depth
+  depth: detailed
+
+  # Custom instructions for homelab context
+  custom_instructions: |
+    This is a homelab multi-agent deployment system with 3 systems:
+    - VPS (91.107.198.37): Public-facing services
+    - ThinkPad (192.168.16.7): Development & testing
+    - RTX1080 (192.168.17.1): Production, GPU services
+
+    Focus on:
+    1. Multi-system deployment orchestration patterns
+    2. Docker Compose best practices (not Kubernetes yet)
+    3. Secrets management across systems
+    4. Deployment rollback strategies
+    5. AI agent resource optimization (GPU utilization)
+
+    Prefer:
+    - Pragmatic over perfect (homelab context, not enterprise)
+    - Simple over complex (maintainability for solo developer)
+    - Documented over clever (learning-focused)
+
+  # Important files to always review
+  important_files:
+    - "**/*agent*.py"
+    - "sprints/sprint-26/**/*.md"
+    - "infrastructure/**/*.yml"
+    - "infrastructure/**/*.yaml"
+    - "shared/scripts/**/*.sh"
+    - ".github/workflows/**/*.yml"
+
+  # Files to ignore
+  ignore_files:
+    - "**/__pycache__/**"
+    - "**/*.pyc"
+    - "**/node_modules/**"
+    - "logs/**"
+    - "data/**"
+    - "**/*.log"
+    - ".venv/**"
+    - "venv/**"
+
+# Review tone and style
+tone: professional
+comment_style: concise
+max_comments_per_file: 10
+
+# Auto-labeling
+labels:
+  architecture: ["architecture", "design", "multi-agent"]
+  security: ["security", "secrets", "vulnerability"]
+  performance: ["performance", "optimization", "gpu"]
+  deployment: ["deployment", "ci-cd", "docker"]
+  documentation: ["documentation", "readme"]
+
+# Path-specific rules
+path_filters:
+  # Skip markdown reviews for roadmap (too long)
+  - path: "ROADMAP*.md"
+    review: false
+
+  # Always review agent code thoroughly
+  - path: "**/*agent*.py"
+    review: true
+    focus: ["architecture", "security", "performance"]
+
+  # Always review infrastructure configs
+  - path: "infrastructure/**/*.yml"
+    review: true
+    focus: ["security", "best_practices"]
+
+  # Review deployment scripts carefully
+  - path: "shared/scripts/**/*.sh"
+    review: true
+    focus: ["security", "best_practices"]
+
+# Notification preferences
+notifications:
+  enabled: true
+  mention_team: false  # Solo developer
+
+# Language-specific settings
+language_settings:
+  python:
+    framework: "fastapi"
+    style_guide: "PEP8"
+    security_checks: true
+
+  yaml:
+    style: "consistent"
+    validate_syntax: true
+
+  shell:
+    validate_syntax: true
+    security_checks: true
+
+# Review checklist
+review_checklist:
+  - "No secrets in code (API keys, passwords, tokens)"
+  - "Docker Compose syntax valid"
+  - "SSH key management secure"
+  - "Proper error handling in deployment scripts"
+  - "Idempotent deployment scripts"
+  - "Rollback strategy documented"
+  - "Health checks implemented"
+  - "Monitoring metrics defined"
+
+# Sprint 26 specific rules
+sprint_26:
+  agent_prompts:
+    - Check for prompt length (80-120 lines target)
+    - Verify shared context references
+    - Validate execution prompt is copy-pasteable
+
+  infrastructure:
+    - Validate multi-system deployment logic
+    - Check secrets sync across systems
+    - Verify rollback procedures
+
+  documentation:
+    - Check for duplication with shared-context files
+    - Validate file paths are correct
+    - Verify naming conventions (kebab-case)
