@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from app.config import settings
 from app.database import engine, Base
 from app.routes import health, auth, users
@@ -15,6 +16,33 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description=settings.APP_DESCRIPTION,
     debug=settings.DEBUG,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "health",
+            "description": "Health check endpoints for monitoring and load balancer probes",
+        },
+        {
+            "name": "auth",
+            "description": "Authentication and authorization endpoints (JWT-based)",
+        },
+        {
+            "name": "users",
+            "description": "User management operations (CRUD)",
+        },
+        {
+            "name": "metrics",
+            "description": "Prometheus metrics endpoint for observability",
+        },
+    ],
+    contact={
+        "name": "HexaHub Team",
+        "url": "https://github.com/yourusername/hexahub",
+    },
+    license_info={
+        "name": "MIT",
+    },
 )
 
 # Configure CORS
@@ -31,16 +59,40 @@ app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 
+# Initialize Prometheus metrics
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
-@app.get("/")
+
+@app.get(
+    "/",
+    summary="API Information",
+    description="Returns basic information about the API including version, documentation URLs, and available endpoints",
+    response_description="API metadata and navigation links",
+    tags=["info"],
+)
 async def root():
-    """Root endpoint."""
+    """
+    Get API Information
+
+    Returns metadata about the HexaHub Backend API including:
+    - API name and version
+    - Description
+    - Links to interactive documentation
+    - Health check endpoint
+    - Metrics endpoint
+    """
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "description": settings.APP_DESCRIPTION,
-        "docs_url": "/docs",
-        "health_url": "/health",
+        "documentation": {
+            "interactive": "/docs",
+            "redoc": "/redoc",
+        },
+        "endpoints": {
+            "health": "/health",
+            "metrics": "/metrics",
+        },
     }
 
 
