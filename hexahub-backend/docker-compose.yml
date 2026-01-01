@@ -2,37 +2,48 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
     container_name: hexahub-postgres
     environment:
-      POSTGRES_USER: hexahub
-      POSTGRES_PASSWORD: hexahub_dev_password
-      POSTGRES_DB: hexahub
+      POSTGRES_USER: ${POSTGRES_USER:-hexahub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hexahub_password}
+      POSTGRES_DB: ${POSTGRES_DB:-hexahub}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hexahub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - hexahub-network
-    restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
-    container_name: hexahub-redis
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hexahub-backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hexahub}:${POSTGRES_PASSWORD:-hexahub_password}@postgres:5432/${POSTGRES_DB:-hexahub}
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      DEBUG: ${DEBUG:-true}
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
     ports:
-      - "6379:6379"
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      - redis_data:/data
+      - ./app:/app/app
     networks:
       - hexahub-network
-    restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:
-    driver: local
-  redis_data:
-    driver: local
 
 networks:
   hexahub-network:
