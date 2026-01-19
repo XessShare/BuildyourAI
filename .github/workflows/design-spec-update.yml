@@ -1,0 +1,290 @@
+name: Design Spec Auto-Update
+
+# Trigger design spec regeneration on:
+# 1. Weekly schedule (Mondays 9 AM)
+# 2. Manual workflow dispatch
+# 3. Changes to design research or shared context
+on:
+  schedule:
+    - cron: '0 9 * * MON'  # Every Monday at 9 AM UTC
+  workflow_dispatch:  # Manual trigger via GitHub UI
+  push:
+    paths:
+      - 'sprints/sprint-26/design-research/**'
+      - 'sprints/sprint-26/shared-context/**'
+
+jobs:
+  update-design-specs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install anthropic google-generativeai pydantic
+
+      - name: Generate Landing Page Spec (Claude)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "Generating Landing Page Design Spec with Claude..."
+          python - <<'EOF'
+          import os
+          from anthropic import Anthropic
+
+          client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+          # Read prompt from library
+          with open("sprints/sprint-26/prompt-library/landing-page-prompt-v2.md") as f:
+              prompt_content = f.read()
+              # Extract prompt between ``` blocks
+              prompt = prompt_content.split("```")[1].strip()
+
+          # Read design context
+          with open("sprints/sprint-26/design-research/DESIGN_CONTEXT.md") as f:
+              context = f.read()
+
+          # Generate spec
+          message = client.messages.create(
+              model="claude-sonnet-4-20250514",
+              max_tokens=4096,
+              messages=[{
+                  "role": "user",
+                  "content": f"{prompt}\n\n**Additional Context:**\n{context[:2000]}"
+              }]
+          )
+
+          # Write output
+          with open("sprints/sprint-26/design-specs/landing-page-spec.md", "w") as f:
+              f.write(message.content[0].text)
+
+          print("✅ Landing Page Spec generated")
+          EOF
+
+      - name: Generate Web-App Dashboard Spec (Claude)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "Generating Web-App Dashboard Design Spec with Claude..."
+          python - <<'EOF'
+          import os
+          from anthropic import Anthropic
+
+          client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+          # Read prompt from library
+          with open("sprints/sprint-26/prompt-library/webapp-dashboard-prompt-v2.md") as f:
+              prompt_content = f.read()
+              prompt = prompt_content.split("```")[1].strip()
+
+          # Read design context
+          with open("sprints/sprint-26/design-research/DESIGN_CONTEXT.md") as f:
+              context = f.read()
+
+          # Generate spec
+          message = client.messages.create(
+              model="claude-sonnet-4-20250514",
+              max_tokens=5120,
+              messages=[{
+                  "role": "user",
+                  "content": f"{prompt}\n\n**Additional Context:**\n{context[:2000]}"
+              }]
+          )
+
+          # Write output
+          with open("sprints/sprint-26/design-specs/webapp-dashboard-spec.md", "w") as f:
+              f.write(message.content[0].text)
+
+          print("✅ Web-App Dashboard Spec generated")
+          EOF
+
+      - name: Generate Design System Spec (Claude)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "Generating Design System Foundations Spec with Claude..."
+          python - <<'EOF'
+          import os
+          from anthropic import Anthropic
+
+          client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+          # Read prompt from library
+          with open("sprints/sprint-26/prompt-library/design-system-prompt-v2.md") as f:
+              prompt_content = f.read()
+              prompt = prompt_content.split("```")[1].strip()
+
+          # Read design context
+          with open("sprints/sprint-26/design-research/DESIGN_CONTEXT.md") as f:
+              context = f.read()
+
+          # Generate spec
+          message = client.messages.create(
+              model="claude-sonnet-4-20250514",
+              max_tokens=4096,
+              messages=[{
+                  "role": "user",
+                  "content": f"{prompt}\n\n**Additional Context:**\n{context[:2000]}"
+              }]
+          )
+
+          # Write output
+          with open("sprints/sprint-26/design-specs/design-system-foundations.md", "w") as f:
+              f.write(message.content[0].text)
+
+          print("✅ Design System Spec generated")
+          EOF
+
+      - name: Generate iOS Spec (Gemini)
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          echo "Generating iOS Design Spec with Gemini..."
+          python - <<'EOF'
+          import os
+          import google.generativeai as genai
+
+          genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+          model = genai.GenerativeModel("gemini-2.0-flash-exp")
+
+          # Read prompt
+          with open("sprints/sprint-26/prompt-library/ios-app-prompt-v2.md") as f:
+              prompt_content = f.read()
+              prompt = prompt_content.split("```")[1].strip()
+
+          # Generate spec
+          response = model.generate_content(prompt)
+
+          # Write output
+          with open("sprints/sprint-26/design-specs/ios-app-spec.md", "w") as f:
+              f.write(response.text)
+
+          print("✅ iOS Spec generated")
+          EOF
+
+      - name: Generate Android Spec (Gemini)
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          echo "Generating Android Design Spec with Gemini..."
+          python - <<'EOF'
+          import os
+          import google.generativeai as genai
+
+          genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+          model = genai.GenerativeModel("gemini-2.0-flash-exp")
+
+          # Read prompt
+          with open("sprints/sprint-26/prompt-library/android-app-prompt-v2.md") as f:
+              prompt_content = f.read()
+              prompt = prompt_content.split("```")[1].strip()
+
+          # Generate spec
+          response = model.generate_content(prompt)
+
+          # Write output
+          with open("sprints/sprint-26/design-specs/android-app-spec.md", "w") as f:
+              f.write(response.text)
+
+          print("✅ Android Spec generated")
+          EOF
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code sprints/sprint-26/design-specs/ || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config user.name "Design Bot"
+          git config user.email "bot@hexahub.dev"
+          git add sprints/sprint-26/design-specs/
+          git commit -m "chore: Auto-update design specs [skip ci]
+
+          Generated by GitHub Actions workflow.
+
+          Updated specs:
+          - Landing Page (Claude Sonnet 4.5)
+          - Web-App Dashboard (Claude Sonnet 4.5)
+          - Design System (Claude Sonnet 4.5)
+          - iOS App (Gemini 2.0 Flash)
+          - Android App (Gemini 2.0 Flash)
+
+          Triggered by: ${{ github.event_name }}
+          "
+          git push
+
+      - name: Create Pull Request (if changes)
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Weekly design spec refresh"
+          title: "🤖 Design Spec Auto-Update (Week ${{ github.run_number }})"
+          body: |
+            ## 🔄 Automated Design Spec Update
+
+            This PR contains automatically generated design specification updates based on the latest research context.
+
+            ### Changes
+            - ✅ Landing Page Spec (regenerated with Claude Sonnet 4.5)
+            - ✅ Web-App Dashboard Spec (regenerated with Claude Sonnet 4.5)
+            - ✅ Design System Spec (regenerated with Claude Sonnet 4.5)
+            - ✅ iOS App Spec (regenerated with Gemini 2.0 Flash)
+            - ✅ Android App Spec (regenerated with Gemini 2.0 Flash)
+
+            ### Context Sources
+            - Design Research: `sprints/sprint-26/design-research/DESIGN_CONTEXT.md`
+            - Optimized Prompts: `sprints/sprint-26/prompt-library/*-v2.md`
+
+            ### Review Checklist
+            - [ ] All 5 specs align with brand guidelines (no buzzwords)
+            - [ ] Competitor differentiation included
+            - [ ] Mobile-responsive notes present (iOS, Android)
+            - [ ] Conversion optimization notes present (Landing Page)
+            - [ ] Component library references present (Web-App, Design System)
+
+            ### Next Steps
+            1. Review diff for quality
+            2. Approve if no issues
+            3. Merge to update production specs
+
+            ---
+
+            🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+            Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+          branch: design-spec-update-week-${{ github.run_number }}
+          base: master
+          labels: |
+            design
+            automated
+            sprint-26
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '❌ Design Spec Auto-Update Failed',
+              body: `Workflow run failed: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+
+              Please review the logs and fix any issues with:
+              - API Keys (ANTHROPIC_API_KEY, GOOGLE_API_KEY)
+              - Prompt Library files
+              - Design Context files
+              `,
+              labels: ['bug', 'automated', 'design']
+            })
